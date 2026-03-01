@@ -7,7 +7,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 const margin = { top: 50, right: 50, bottom: 70, left: 100 };
 const rowHeight = 500;
-const plotGap = 20;
 
 async function fetchData() {
   try {
@@ -26,6 +25,18 @@ async function fetchData() {
   }
 }
 
+function setActivePhase(phase) {
+  const phases = document.querySelectorAll('#explain_text .explain-phase');
+  phases.forEach(el => {
+    const elPhase = parseInt(el.dataset.phase, 10);
+    if (elPhase === phase) {
+      el.classList.add('active');
+    } else {
+      el.classList.remove('active');
+    }
+  });
+}
+
 function plotData(nonDiabeticParticipants, cgmData, mealData) {
   const pidCounts = {};
   cgmData.forEach(d => {
@@ -42,26 +53,29 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
 
   const container = document.getElementById("explain_graph");
 
-  const svgWidth = container.clientWidth;
-  const svgHeight = container.clientHeight;
+  const style = getComputedStyle(container);
+  const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+  const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+  const svgWidth = container.clientWidth - paddingX;
+  const svgHeight = container.clientHeight - paddingY;
 
   const svg = d3.select('#explain_graph')
     .append('svg')
-    .attr('width', svgWidth)
-    .attr('height', svgHeight)
+    .attr('viewBox', `0 0 ${svgWidth} ${svgHeight}`)
+    .attr('preserveAspectRatio', 'xMidYMid meet')
+    .style('width', '100%')
+    .style('height', '100%')
     .append('g')
     .attr('transform', `translate(${margin.left},${margin.top})`);
 
   const parseTime = (timestamp) => {
     try {
-      // Handle Date objects directly
       if (timestamp instanceof Date) {
         const hours = timestamp.getHours();
         const minutes = timestamp.getMinutes();
         const decimalHours = hours + minutes / 60;
         return decimalHours < 12 ? decimalHours : null;
       }
-      // Handle string timestamps (e.g., "1 days 06:47:00")
       const str = String(timestamp);
       if (str.includes(":")) {
         const timePart = str.split(" ").find(part => part.includes(":"));
@@ -160,7 +174,7 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
       .attr("stroke-width", 1);
   }
 
-  // Y-axis label — properly centered and rotated
+  // Y-axis label
   svg.append("text")
     .attr("class", "y label")
     .attr("text-anchor", "middle")
@@ -208,26 +222,6 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
     .attr("class", "hover-group")
     .style("pointer-events", "none");
 
-  // Narration text box
-  const narrationGroup = svg.append("g")
-    .attr("class", "narration-group")
-    .attr("transform", `translate(20, 20)`)
-    .style("opacity", 0);
-
-  narrationGroup.append("rect")
-    .attr("x", 0).attr("y", 0)
-    .attr("width", 420).attr("height", 40)
-    .attr("fill", "white").attr("fill-opacity", 0.85)
-    .attr("stroke", "#ccc").attr("stroke-width", 1)
-    .attr("rx", 8).attr("ry", 8);
-
-  const narrationText = narrationGroup.append("text")
-    .attr("x", 15).attr("y", 26)
-    .attr("fill", "#333")
-    .style("font-size", "15px")
-    .style("font-weight", "500")
-    .text("");
-
   // Filter meals for this participant
   const allMealsForPid = mealData.filter(d => String(d.PID) === String(onlyParticipant.pid));
 
@@ -239,11 +233,9 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
 
   // Helper: check if a timestamp falls on the same calendar day as firstMealDate
   function isDay1(ts) {
-    // Handle string timestamps (e.g., "1 days 06:47:00")
     if (typeof ts === 'string') {
       return ts.startsWith("1 days") || ts.startsWith("1 day") || ts.includes("Day 1");
     }
-    // Handle Date objects
     const d = ts instanceof Date ? ts : new Date(ts);
     return d.getFullYear() === firstMealDate.getFullYear() &&
            d.getMonth() === firstMealDate.getMonth() &&
@@ -255,14 +247,12 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
     (d["Meal Type"] === "breakfast" || d["Meal Type"] === "lunch")
   );
 
-  console.log('[metrics-explain] First meal date:', firstMealDate, 'Day 1 meals found:', mealForParticipant.length);
-
   const breakfastMeal = mealForParticipant.find(d => d["Meal Type"] === "breakfast");
   const lunchMeal = mealForParticipant.find(d => d["Meal Type"] === "lunch");
 
   if (!breakfastMeal || !lunchMeal) {
     console.error('[metrics-explain] Missing meal data. breakfast:', breakfastMeal, 'lunch:', lunchMeal);
-    setupScrollAnimation({ path, totalLength, trackingDot, mealLinesGroup, dots: [], excTimeLines: [], excLines: [], recLines: [], hoverGroup, narrationGroup, narrationText });
+    setupScrollAnimation({ path, totalLength, trackingDot, mealLinesGroup, dots: [], excTimeLines: [], excLines: [], recLines: [], hoverGroup });
     return;
   }
 
@@ -321,23 +311,6 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
       .text(d["Meal Type"]);
   });
 
-  // Debug: log computed positions
-  console.log('[metrics-explain] Computed values:', {
-    breakfast_startTime, lunch_startTime,
-    breakfast_start_glucose_value, lunch_start_glucose_value,
-    breakfast_glucose_excursion_time, lunch_glucose_excursion_time,
-    breakfast_glucose_excursion_value, lunch_glucose_excursion_value,
-    breakfast_glucose_recovery_time, lunch_glucose_recovery_time,
-  });
-  console.log('[metrics-explain] Pixel positions:', {
-    bf_start_x: x(breakfast_startTime), bf_start_y: y(breakfast_start_glucose_value),
-    bf_peak_x: x(breakfast_glucose_excursion_time), bf_peak_y: y(breakfast_glucose_excursion_value),
-    bf_recovery_x: x(breakfast_glucose_recovery_time), bf_recovery_y: y(breakfast_start_glucose_value),
-    lu_start_x: x(lunch_startTime), lu_start_y: y(lunch_start_glucose_value),
-    lu_peak_x: x(lunch_glucose_excursion_time), lu_peak_y: y(lunch_glucose_excursion_value),
-    lu_recovery_x: x(lunch_glucose_recovery_time), lu_recovery_y: y(lunch_start_glucose_value),
-  });
-
   // --- Individual dots (start at r=0, pop in via r animation) ---
   const dots = [
     // Breakfast: start, peak, recovery
@@ -349,9 +322,6 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
     svg.append("circle").attr("cx", x(lunch_glucose_excursion_time)).attr("cy", y(lunch_glucose_excursion_value)).attr("r", 0).attr("fill", "red"),
     svg.append("circle").attr("cx", x(lunch_glucose_recovery_time)).attr("cy", y(lunch_glucose_recovery_value)).attr("r", 0).attr("fill", "red"),
   ];
-  console.log('[metrics-explain] Created', dots.length, 'dots. Nodes:', dots.map((d, i) => ({
-    i, cx: d.attr("cx"), cy: d.attr("cy"), r: d.attr("r"), node: d.node().tagName
-  })));
 
   // --- Helper: create a line hidden via stroke-dashoffset for draw animation ---
   function createAnimLine(x1Val, y1Val, x2Val, y2Val, cls) {
@@ -388,12 +358,6 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
   const luRecLine = createAnimLine(
     x(lunch_glucose_excursion_time), y(lunch_start_glucose_value),
     x(lunch_glucose_recovery_time), y(lunch_glucose_recovery_value), "hover-line-gr");
-
-  console.log('[metrics-explain] Lines created:', {
-    bfExcTimeLine: { dasharray: bfExcTimeLine.attr("stroke-dasharray"), dashoffset: bfExcTimeLine.attr("stroke-dashoffset"), x1: bfExcTimeLine.attr("x1"), x2: bfExcTimeLine.attr("x2") },
-    bfExcLine: { dasharray: bfExcLine.attr("stroke-dasharray"), dashoffset: bfExcLine.attr("stroke-dashoffset"), y1: bfExcLine.attr("y1"), y2: bfExcLine.attr("y2") },
-    bfRecLine: { dasharray: bfRecLine.attr("stroke-dasharray"), dashoffset: bfRecLine.attr("stroke-dashoffset"), x1: bfRecLine.attr("x1"), x2: bfRecLine.attr("x2") },
-  });
 
   // --- Hover tooltips (in hoverGroup, activated after all lines drawn) ---
 
@@ -489,27 +453,14 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
     excTimeLines: [bfExcTimeLine, luExcTimeLine],
     excLines: [bfExcLine, luExcLine],
     recLines: [bfRecLine, luRecLine],
-    hoverGroup, narrationGroup, narrationText,
+    hoverGroup,
   });
 }
 
-function setupScrollAnimation({ path, totalLength, trackingDot, mealLinesGroup, dots, excTimeLines, excLines, recLines, hoverGroup, narrationGroup, narrationText }) {
+function setupScrollAnimation({ path, totalLength, trackingDot, mealLinesGroup, dots, excTimeLines, excLines, recLines, hoverGroup }) {
   const pathNode = path.node();
   const dotNode = trackingDot.node();
   const mealLinesNode = mealLinesGroup.node();
-  const narrationNode = narrationGroup.node();
-  const narrationTextNode = narrationText.node();
-
-  console.log('[metrics-explain] setupScrollAnimation called with:', {
-    totalLength,
-    dotsCount: dots.length,
-    excTimeLinesCount: excTimeLines.length,
-    excLinesCount: excLines.length,
-    recLinesCount: recLines.length,
-    pathNode: pathNode?.tagName,
-    mealLinesNode: mealLinesNode?.tagName,
-    narrationNode: narrationNode?.tagName,
-  });
 
   const tl = gsap.timeline({
     scrollTrigger: {
@@ -519,17 +470,10 @@ function setupScrollAnimation({ path, totalLength, trackingDot, mealLinesGroup, 
       scrub: true,
       pin: true,
       pinSpacing: true,
-      onUpdate: (self) => {
-        if (Math.round(self.progress * 100) % 10 === 0) {
-          console.log('[metrics-explain] scroll progress:', (self.progress * 100).toFixed(0) + '%');
-        }
-      },
     }
   });
 
-  console.log('[metrics-explain] Timeline created, total duration will build up as tweens added');
-
-  // Phase 1: Draw the glucose line and move the tracking dot
+  // Phase 0: Draw the glucose line and move the tracking dot (text phase 0 is already visible)
   tl.fromTo(pathNode,
     { attr: { "stroke-dashoffset": totalLength } },
     {
@@ -537,8 +481,8 @@ function setupScrollAnimation({ path, totalLength, trackingDot, mealLinesGroup, 
       duration: 2,
       ease: "none",
       onStart: () => {
-        console.log('[metrics-explain] Phase 1: line draw START');
         gsap.set(dotNode, { opacity: 1 });
+        setActivePhase(0);
       },
       onUpdate: function() {
         const progress = this.progress();
@@ -549,82 +493,40 @@ function setupScrollAnimation({ path, totalLength, trackingDot, mealLinesGroup, 
     }
   );
 
-  // Phase 2: Fade out the tracking dot
-  tl.to(dotNode, { opacity: 0, duration: 0.2, onStart: () => console.log('[metrics-explain] Phase 2: fade dot') });
+  // Fade out the tracking dot
+  tl.to(dotNode, { opacity: 0, duration: 0.2 });
 
-  // Phase 3: Fade in meal dashed lines + show narration
-  tl.to(narrationNode, { opacity: 1, duration: 0.1 });
-  tl.add(() => {
-    console.log('[metrics-explain] Phase 3: meal lines. mealLinesNode children:', mealLinesNode?.childNodes?.length, 'current opacity:', mealLinesNode?.style?.opacity);
-    narrationTextNode.textContent = "Breakfast and lunch times are marked";
-  });
+  // Fade in meal dashed lines
   tl.to(mealLinesNode, { opacity: 1, duration: 0.4 });
 
-  // Phase 4: Pop in the 3 key dots per meal (r: 0 → 5)
-  tl.add(() => {
-    console.log('[metrics-explain] Phase 4: dots. count:', dots.length);
-    dots.forEach((d, i) => {
-      const node = d.node();
-      console.log(`  dot[${i}]: cx=${node.getAttribute('cx')} cy=${node.getAttribute('cy')} r=${node.getAttribute('r')} parent=${node.parentNode?.tagName}.${node.parentNode?.getAttribute?.('class') || ''}`);
-    });
-    narrationTextNode.textContent = "Key glucose points are identified";
-  });
+  // Pop in the 3 key dots per meal (r: 0 -> 5)
   if (dots.length > 0) {
-    tl.to(dots.map(d => d.node()), { attr: { r: 5 }, duration: 0.3, stagger: 0.05,
-      onStart: () => console.log('[metrics-explain] Phase 4: dot tween START'),
-      onComplete: () => {
-        console.log('[metrics-explain] Phase 4: dot tween COMPLETE');
-        dots.forEach((d, i) => console.log(`  dot[${i}] r after:`, d.node().getAttribute('r')));
-      }
-    });
+    tl.to(dots.map(d => d.node()), { attr: { r: 5 }, duration: 0.3, stagger: 0.05 });
   }
 
-  // Phase 5: Draw excursion time horizontal lines
-  tl.add(() => {
-    console.log('[metrics-explain] Phase 5: excursion time lines. count:', excTimeLines.length);
-    excTimeLines.forEach((l, i) => {
-      const n = l.node();
-      console.log(`  excTimeLine[${i}]: dashoffset=${n.getAttribute('stroke-dashoffset')} dasharray=${n.getAttribute('stroke-dasharray')} parent=${n.parentNode?.tagName}`);
-    });
-    narrationTextNode.textContent = "Glucose excursion time — time to reach peak";
-  });
+  // Phase 1: Draw excursion time horizontal lines
+  tl.add(() => setActivePhase(1));
   if (excTimeLines.length > 0) {
-    tl.to(excTimeLines.map(l => l.node()), { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "none",
-      onStart: () => console.log('[metrics-explain] Phase 5: line draw tween START'),
-      onComplete: () => console.log('[metrics-explain] Phase 5: line draw tween COMPLETE'),
-    });
+    tl.to(excTimeLines.map(l => l.node()), { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "none" });
   }
 
-  // Phase 6: Draw excursion vertical lines
-  tl.add(() => {
-    console.log('[metrics-explain] Phase 6: excursion vertical lines. count:', excLines.length);
-    narrationTextNode.textContent = "Glucose excursion — maximum glucose level reached";
-  });
+  // Phase 2: Draw excursion vertical lines
+  tl.add(() => setActivePhase(2));
   if (excLines.length > 0) {
-    tl.to(excLines.map(l => l.node()), { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "none",
-      onStart: () => console.log('[metrics-explain] Phase 6: line draw tween START'),
-    });
+    tl.to(excLines.map(l => l.node()), { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "none" });
   }
 
-  // Phase 7: Draw recovery horizontal lines
-  tl.add(() => {
-    console.log('[metrics-explain] Phase 7: recovery lines. count:', recLines.length);
-    narrationTextNode.textContent = "Glucose recovery — time to return to baseline";
-  });
+  // Phase 3: Draw recovery horizontal lines
+  tl.add(() => setActivePhase(3));
   if (recLines.length > 0) {
-    tl.to(recLines.map(l => l.node()), { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "none",
-      onStart: () => console.log('[metrics-explain] Phase 7: line draw tween START'),
-    });
+    tl.to(recLines.map(l => l.node()), { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "none" });
   }
 
-  // Phase 8: Enable hover tooltips + hold
+  // Enable hover tooltips + hold
   tl.add(() => {
-    console.log('[metrics-explain] Phase 8: enable hover + hold');
     hoverGroup.style("pointer-events", "all");
   });
   tl.to({}, { duration: 1 });
-
-  console.log('[metrics-explain] Timeline total duration:', tl.duration());
 
   // Refresh ScrollTrigger since this runs after async data load
   requestAnimationFrame(() => {

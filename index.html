@@ -226,24 +226,33 @@
 
             <section id="glu_metrics_explain">
                 <h2 class="section-header">Measuring Glucose Variance</h2>
-                <div id="explain_graph"></div>
-            </section>
-
-            <section class="roll analysis-section">
-                <div class="description">
-                    <h2 class="section-header">Controlled Meal Analysis</h2>
-                    <p style="color: black;">In our study, participants followed a controlled meal schedule:</p>
-                    <ul class="meal-list details" style="list-style-type: none; padding: 0; margin: 5px 0;">
-                        <li>• Identical protein shake for breakfast</li>
-                        <li>• Standardized Chipotle meal for lunch</li>
-                    </ul>
-                    <p style="color: black;">This controlled environment allows us to analyze three key metrics:</p>
-                    <ul class="metrics-list details" style="list-style-type: none; padding: 0; margin: 5px 0;">
-                        <li>• Glucose excursion (spike height after meals)</li>
-                        <li>• Peak time (duration until maximum glucose)</li>
-                        <li>• Recovery duration (time to return to baseline)</li>
-                    </ul>
-                    <p style="color: black;">These measurements help us understand how different diabetic conditions affect glucose regulation.</p>
+                <div id="explain_content">
+                    <div id="explain_graph"></div>
+                    <div id="explain_text">
+                        <div class="explain-phase active" data-phase="0">
+                            <p>In our study, participants followed a controlled meal schedule:</p>
+                            <ul>
+                                <li>Identical protein shake for breakfast</li>
+                                <li>Standardized Chipotle meal for lunch</li>
+                            </ul>
+                            <p>This controlled environment allows us to analyze three key metrics that reveal how different diabetic conditions affect glucose regulation.</p>
+                        </div>
+                        <div class="explain-phase" data-phase="1">
+                            <h3>Glucose Excursion Time</h3>
+                            <p>The time it takes to reach the maximum glucose level after a meal.</p>
+                            <p>This metric captures how quickly the body absorbs glucose from food. A longer excursion time may indicate slower digestion or impaired insulin response.</p>
+                        </div>
+                        <div class="explain-phase" data-phase="2">
+                            <h3>Glucose Excursion</h3>
+                            <p>The spike height — the maximum glucose level reached after having a meal.</p>
+                            <p>Higher excursions suggest the body is less effective at regulating glucose uptake, a hallmark of insulin resistance.</p>
+                        </div>
+                        <div class="explain-phase" data-phase="3">
+                            <h3>Recovery Duration</h3>
+                            <p>The time it takes for glucose to return to its baseline level after a meal.</p>
+                            <p>Longer recovery times indicate the body struggles to clear excess glucose from the bloodstream.</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 

@@ -2,29 +2,83 @@
 #glu_metrics_explain {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   padding: 2rem;
+  width: 100%;
   height: 100vh;
   min-height: 100vh;
 }
 
+#explain_content {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  gap: 1.5rem;
+  min-height: 0;
+}
+
 #glu_metrics_explain #explain_graph {
-  border: 1px solid #ccc;
   padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  width: 100%;
-  height: 100%;
-  flex: 0 0 70%;
+  flex: 0 0 65%;
+  min-height: 0;
 }
 
 #glu_metrics_explain #explain_text {
-  border: 1px solid #ccc;
-  padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  width: 100%;
-  height: 100%;
-  flex: 0 0 30%;
+  padding: 30px;
+  flex: 0 0 calc(35% - 1.5rem);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Phase text blocks */
+.explain-phase {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(calc(-50% + 12px));
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+
+.explain-phase.active {
+  opacity: 1;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+.explain-phase h3 {
+  font-size: 1.6rem;
+  color: var(--color-blue);
+  margin-bottom: 0.8rem;
+}
+
+.explain-phase p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #333;
+  margin: 0.5rem 0;
+}
+
+.explain-phase ul {
+  list-style-type: disc;
+  list-style-position: inside;
+  padding-left: 0;
+  margin: 0.5rem 0;
+}
+
+.explain-phase li {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #333;
+  margin: 0.3rem 0;
 }
 
 #panel-4 {
@@ -110,42 +164,3 @@
   margin-top: 24px;
 }
 
-/* Analysis section */
-.roll.analysis-section {
-  min-height: auto;
-  height: auto;
-  padding: 20px 0;
-}
-
-.roll.analysis-section .description {
-  max-width: 70vw;
-  margin: 0 auto;
-  background: var(--color-pastel);
-  padding: 30px;
-}
-
-.roll.analysis-section .section-header {
-  font-size: 2.5rem;
-  margin-bottom: 20px;
-  color: var(--color-blue);
-}
-
-.roll.analysis-section .details {
-  font-size: 1.2rem;
-  line-height: 1.6;
-  color: #333;
-  margin: 10px 0;
-  width: 100%;
-}
-
-.roll.analysis-section .meal-list,
-.roll.analysis-section .metrics-list {
-  margin: 10px 0;
-  padding: 0 20px;
-}
-
-.roll.analysis-section li {
-  margin: 5px 0;
-  color: #333;
-  font-size: 1.2rem;
-}
