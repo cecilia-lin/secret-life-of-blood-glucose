@@ -1,0 +1,16 @@
+.DS_Store
+CGMacros
+cleaned_data
+.ipynb_checkpoints
+/__pycache__
+__pycache__
+Final-Project.code-workspace
+.csv
+.zip
+.pdf
+.txt
+/data
+/cleaned_data
+.vscode
+node_modules
+dist

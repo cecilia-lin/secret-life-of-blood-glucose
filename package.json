@@ -1,0 +1,30 @@
+{
+  "name": "blood_glucose",
+  "version": "1.0.0",
+  "description": "1. Download the dataset from [PhysioNet](https://physionet.org/content/cgmacros/1.0.0/) 2. Unzip and rename the folder to `data` 3. Run `data_cleaning.py` to process the data",
+  "main": "distribution.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/g7xu/blood_glucose.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/g7xu/blood_glucose/issues"
+  },
+  "homepage": "https://github.com/g7xu/blood_glucose#readme",
+  "devDependencies": {
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "d3": "^7.9.0",
+    "gsap": "^3.14.2"
+  }
+}
