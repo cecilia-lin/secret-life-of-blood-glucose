@@ -1,43 +1,36 @@
-import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
+import * as d3 from 'd3';
+import { getTooltip, showTooltip, hideTooltip } from '../utils/tooltip.js';
+import { groupColorScale } from '../utils/colors.js';
+import { loadCGMacros, loadBio } from '../utils/data-loader.js';
+import { parseTimestamp } from '../utils/parse-timestamp.js';
 
-let tooltipDiv = document.createElement("div");
-tooltipDiv.className = "tooltip";
-tooltipDiv.style.position = "absolute";
-tooltipDiv.style.backgroundColor = "white";
-tooltipDiv.style.border = "1px solid black";
-tooltipDiv.style.borderRadius = "5px";
-tooltipDiv.style.padding = "10px";
-tooltipDiv.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
-tooltipDiv.style.zIndex = "1000";
-tooltipDiv.style.display = "none"; // Use display instead of visibility
-document.body.appendChild(tooltipDiv);
-
+const BASE = import.meta.env.BASE_URL;
 const margin = { top: 40, right: 50, bottom: 50, left: 60 };
 let activeParticipants = new Set();
 let timeRange = [1440, 14385];
 let data, processedData, xScale, yScale, colorScale;
 let tooltip;
-
+let tooltipDiv;
 
 const diabetic = {
-  breakfast: 'assets/pics/d_breakfast.png',
-  lunch: 'assets/pics/d_lunch.png',
-  dinner: 'assets/pics/d_dinner.png',
-  snack: 'assets/pics/d_snack.png',
+  breakfast: BASE + 'pics/d_breakfast.png',
+  lunch: BASE + 'pics/d_lunch.png',
+  dinner: BASE + 'pics/d_dinner.png',
+  snack: BASE + 'pics/d_snack.png',
 };
 
 const prediabetic = {
-  breakfast: 'assets/pics/pd_breakfast.png',
-  lunch: 'assets/pics/pd_lunch.png',
-  dinner: 'assets/pics/pd_dinner.png',
-  snack: 'assets/pics/pd_snack.png'
+  breakfast: BASE + 'pics/pd_breakfast.png',
+  lunch: BASE + 'pics/pd_lunch.png',
+  dinner: BASE + 'pics/pd_dinner.png',
+  snack: BASE + 'pics/pd_snack.png'
 };
 
 const nondiabetic = {
-  breakfast: 'assets/pics/nd_breakfast.png',
-  lunch: 'assets/pics/nd_lunch.png',
-  dinner: 'assets/pics/nd_dinner.png',
-  snack: 'assets/pics/nd_snack.png'
+  breakfast: BASE + 'pics/nd_breakfast.png',
+  lunch: BASE + 'pics/nd_lunch.png',
+  dinner: BASE + 'pics/nd_dinner.png',
+  snack: BASE + 'pics/nd_snack.png'
 };
 
 const mealIcons = {
@@ -46,18 +39,7 @@ const mealIcons = {
   "Non-diabetic": nondiabetic
 };
 
-const container = d3.select('.visualization-wrapper');
-const svg = container.append('svg')
-  .attr('width', '100%')
-  .attr('height', '100%')
-  .attr('viewBox', `0 0 ${container.node().clientWidth} ${container.node().clientHeight}`)
-  .attr('preserveAspectRatio', 'xMidYMid meet');
-const g = svg.append("g")
-  .attr("transform", `translate(${margin.left}, ${margin.top})`);
-
-document.addEventListener("DOMContentLoaded", function() {
-  loadDataAndPlot();
-});
+let container, svg, g;
 
 function createParticipantButtons(participants) {
   d3.selectAll('.participant-buttons').selectAll('*').remove();
@@ -79,7 +61,7 @@ function createParticipantButtons(participants) {
 
           button.addEventListener('click', function() {
             const isActive = button.classList.contains('active');
-            
+
             if (isActive) {
               activeParticipants.delete(pid);
               button.classList.remove('active');
@@ -87,58 +69,54 @@ function createParticipantButtons(participants) {
               activeParticipants.add(pid);
               button.classList.add('active');
             }
-            
+
             updateVisualization();
           });
-        } else {
-          console.error(`.participant-buttons element not found in ${participant.diabetic_level} categoryDiv`);
         }
-      } else {
-        console.error(`categoryDiv with id ${participant.diabetic_level} not found`);
       }
     }
   });
 }
 
 function rendering_timeSlider(startDay, endDay) {
-  const container = d3.select("#time-range-selector");
-  container.selectAll("*").remove();
+  const sliderContainer = d3.select("#time-range-selector");
+  sliderContainer.selectAll("*").remove();
 
-  const style = window.getComputedStyle(container.node());
+  const style = window.getComputedStyle(sliderContainer.node());
   const paddingLeft = parseFloat(style.paddingLeft);
   const paddingRight = parseFloat(style.paddingRight);
 
-  const width = container.node().clientWidth - paddingLeft - paddingRight;
+  const width = sliderContainer.node().clientWidth - paddingLeft - paddingRight;
   const height = 50;
-  const margin = { left: 8, right: 8 };
-  const sliderWidth = width - margin.left - margin.right;
+  const sliderMargin = { left: 8, right: 8 };
+  const sliderWidth = width - sliderMargin.left - sliderMargin.right;
 
   const fullTimeExtent = [1440, 14385];
   const daysExtent = [1, Math.ceil(fullTimeExtent[1] / 1440)];
 
-  const xScale = d3.scaleLinear()
+  const sliderXScale = d3.scaleLinear()
     .domain(daysExtent)
-    .range([margin.left, sliderWidth + margin.left])
+    .range([sliderMargin.left, sliderWidth + sliderMargin.left])
     .clamp(true);
 
-  const svg = container.append("svg")
+  const sliderSvg = sliderContainer.append("svg")
     .attr("width", width)
     .attr("height", height)
     .attr('class', 'range-slider');
 
-  const track = svg.append('line')
+  sliderSvg.append('line')
     .attr('class', 'track')
-    .attr('x1', margin.left)
-    .attr('x2', sliderWidth + margin.left)
+    .attr('x1', sliderMargin.left)
+    .attr('x2', sliderWidth + sliderMargin.left)
     .attr('y1', height / 2)
     .attr('y2', height / 2)
     .attr('stroke', '#d2d2d7')
     .attr('stroke-width', 4);
 
-  const trackFill = svg.append('line')
+  const trackFill = sliderSvg.append('line')
     .attr('class', 'track-fill')
-    .attr('x1', xScale(startDay))
-    .attr('x2', xScale(endDay))
+    .attr('x1', sliderXScale(startDay))
+    .attr('x2', sliderXScale(endDay))
     .attr('y1', height / 2)
     .attr('y2', height / 2)
     .attr('stroke', '#0071e3')
@@ -146,90 +124,85 @@ function rendering_timeSlider(startDay, endDay) {
 
   const circle_size = 7;
 
-  const handleStart = svg.append('circle')
+  const handleStart = sliderSvg.append('circle')
     .attr('class', 'handle')
-    .attr('cx', xScale(startDay))
+    .attr('cx', sliderXScale(startDay))
     .attr('cy', height / 2)
     .attr('r', circle_size)
     .attr('fill', '#0071e3')
     .call(d3.drag()
       .on('drag', function(event) {
-        const day = Math.round(xScale.invert(event.x - margin.left));
-        const endDay = Math.round(xScale.invert(handleEnd.attr('cx') - margin.left));
-        if (day < endDay) {
-          handleStart.attr('cx', xScale(day));
-          trackFill.attr('x1', xScale(day));
-          updateTimeRange(day, endDay);
+        const day = Math.round(sliderXScale.invert(event.x - sliderMargin.left));
+        const end = Math.round(sliderXScale.invert(handleEnd.attr('cx') - sliderMargin.left));
+        if (day < end) {
+          handleStart.attr('cx', sliderXScale(day));
+          trackFill.attr('x1', sliderXScale(day));
+          updateTimeRange(day, end);
         }
       }));
 
-  const handleEnd = svg.append('circle')
+  const handleEnd = sliderSvg.append('circle')
     .attr('class', 'handle')
-    .attr('cx', xScale(endDay))
+    .attr('cx', sliderXScale(endDay))
     .attr('cy', height / 2)
     .attr('r', circle_size)
     .attr('fill', '#0071e3')
     .call(d3.drag()
       .on('drag', function(event) {
-        const day = Math.round(xScale.invert(event.x - margin.left));
-        const startDay = Math.round(xScale.invert(handleStart.attr('cx') - margin.left));
-        if (day > startDay) {
-          handleEnd.attr('cx', xScale(day));
-          trackFill.attr('x2', xScale(day));
-          updateTimeRange(startDay, day);
+        const day = Math.round(sliderXScale.invert(event.x - sliderMargin.left));
+        const start = Math.round(sliderXScale.invert(handleStart.attr('cx') - sliderMargin.left));
+        if (day > start) {
+          handleEnd.attr('cx', sliderXScale(day));
+          trackFill.attr('x2', sliderXScale(day));
+          updateTimeRange(start, day);
         }
       }));
 
-  // **Add Click Event to Track**
-  svg.on("click", function(event) {
+  sliderSvg.on("click", function(event) {
     const clickedX = event.offsetX;
-    const clickedDay = Math.round(xScale.invert(clickedX - margin.left));
+    const clickedDay = Math.round(sliderXScale.invert(clickedX - sliderMargin.left));
 
-    const startDayCurrent = Math.round(xScale.invert(handleStart.attr("cx") - margin.left));
-    const endDayCurrent = Math.round(xScale.invert(handleEnd.attr("cx") - margin.left));
+    const startDayCurrent = Math.round(sliderXScale.invert(handleStart.attr("cx") - sliderMargin.left));
+    const endDayCurrent = Math.round(sliderXScale.invert(handleEnd.attr("cx") - sliderMargin.left));
 
-    // Determine which handle is closer and move it
     if (Math.abs(clickedDay - startDayCurrent) < Math.abs(clickedDay - endDayCurrent)) {
-      // Move start handle
       if (clickedDay < endDayCurrent) {
-        handleStart.attr('cx', xScale(clickedDay));
-        trackFill.attr('x1', xScale(clickedDay));
+        handleStart.attr('cx', sliderXScale(clickedDay));
+        trackFill.attr('x1', sliderXScale(clickedDay));
         updateTimeRange(clickedDay, endDayCurrent);
       }
     } else {
-      // Move end handle
       if (clickedDay > startDayCurrent) {
-        handleEnd.attr('cx', xScale(clickedDay));
-        trackFill.attr('x2', xScale(clickedDay));
+        handleEnd.attr('cx', sliderXScale(clickedDay));
+        trackFill.attr('x2', sliderXScale(clickedDay));
         updateTimeRange(startDayCurrent, clickedDay);
       }
     }
   });
 
-  const xAxis = d3.axisBottom(xScale)
+  const xAxis = d3.axisBottom(sliderXScale)
     .ticks(daysExtent[1])
     .tickFormat(d => `${d}d`)
     .tickSize(0);
 
-  const xAxisGroup = svg.append("g")
+  const xAxisGroup = sliderSvg.append("g")
     .attr("class", "x-axis")
     .attr("transform", `translate(0, ${height - 10})`)
     .call(xAxis);
 
   xAxisGroup.select(".domain").remove();
 
-  function updateTimeRange(startDay, endDay) {
-    timeRange = [startDay * 1440, endDay * 1440];
+  function updateTimeRange(start, end) {
+    timeRange = [start * 1440, end * 1440];
     updateVisualization();
   }
 }
-
 
 function getTimeRangeExtent(range) {
   if (Array.isArray(range)) {
     if (range[0] > range[1]) {
       throw new Error("Invalid time range: start time is greater than end time.");
-    } 
+    }
     return range;
   }
 }
@@ -244,7 +217,6 @@ function updateVisualization() {
   svg.attr('viewBox', `0 0 ${containerWidth} ${containerHeight}`)
     .attr('class', 'main-svg');
   g.attr("transform", `translate(${margin.left}, ${margin.top})`);
-  
 
   const timeExtent = getTimeRangeExtent(timeRange);
 
@@ -280,8 +252,8 @@ function updateVisualization() {
     for (let i = filteredTimeExtent[0]; i <= filteredTimeExtent[1]; i += 1440) {
       tickValues.push(i);
     }
-  } 
-  
+  }
+
   g.select(".x-axis")
     .transition()
     .duration(750)
@@ -312,9 +284,7 @@ function updateVisualization() {
     .attr("stroke-width", 1)
     .attr("stroke-dasharray", "3,3");
 
-  const diabeticLevelColorScale = d3.scaleOrdinal()
-    .domain(['Non-diabetic', 'Pre-diabetic', 'Diabetic'])
-    .range(['#2ecc71', '#f1c40f', '#4059ad']);
+  const diabeticLevelColorScale = groupColorScale;
 
   const lines = g.selectAll(".line")
     .data(filteredData.filter(d => activeParticipants.has(d.pid)));
@@ -344,15 +314,14 @@ function updateVisualization() {
       tooltip.transition()
         .duration(200)
         .style('opacity', .9);
-      
-        
+
       const [mouseX] = d3.pointer(event, this);
       const hoveredTime = xScale.invert(mouseX);
-      
+
       const bisect = d3.bisector(d => d.time).left;
       const index = bisect(d.values, hoveredTime);
       const dataPoint = index > 0 ? d.values[index - 1] : d.values[0];
-      
+
       tooltip.html(`Participant: ${d.pid}<br>Time: ${Math.round(dataPoint.time)} min<br>Glucose: ${dataPoint.glucose}`)
         .style('left', (event.pageX + 5) + 'px')
         .style('top', (event.pageY - 28) + 'px');
@@ -360,14 +329,14 @@ function updateVisualization() {
     .on('mousemove', function(event, d) {
       const [mouseX] = d3.pointer(event, this);
       const hoveredTime = xScale.invert(mouseX);
-      
+
       const bisect = d3.bisector(d => d.time).left;
       const index = bisect(d.values, hoveredTime);
-      const dataPoint = index > 0 && index < d.values.length ? 
-                        (hoveredTime - d.values[index-1].time < d.values[index].time - hoveredTime ? 
-                         d.values[index-1] : d.values[index]) : 
+      const dataPoint = index > 0 && index < d.values.length ?
+                        (hoveredTime - d.values[index-1].time < d.values[index].time - hoveredTime ?
+                         d.values[index-1] : d.values[index]) :
                         (index > 0 ? d.values[index-1] : d.values[0]);
-      
+
       tooltip.html(`Participant: ${d.pid}<br>Time: ${Math.round(dataPoint.time)} min<br>Glucose: ${dataPoint.glucose}`)
         .style('left', (event.pageX + 5) + 'px')
         .style('top', (event.pageY - 28) + 'px');
@@ -385,7 +354,6 @@ function updateVisualization() {
   g.selectAll('.meal-time-line').remove();
   g.selectAll('.meal-time-dot').remove();
   g.selectAll('.meal-dot').remove();
-  
 
   filteredData.forEach(participant => {
     if (activeParticipants.has(participant.pid)) {
@@ -396,7 +364,7 @@ function updateVisualization() {
             .attr('transform', `translate(${xScale(d.time)}, ${yScale(d.glucose) * 0.7 - 30})`);
 
           const isMealIconsVisible = document.getElementById("toggle-meal-icons").checked;
-  
+
           const line = g.append('line')
             .attr('class', 'meal-time-line')
             .attr('x1', xScale(d.time))
@@ -406,27 +374,26 @@ function updateVisualization() {
             .attr('stroke', 'gray')
             .attr('stroke-width', 1)
             .attr('stroke-dasharray', '4,4')
-            .style('opacity', isMealIconsVisible ? 1 : 0); // Respect toggle state
-            
+            .style('opacity', isMealIconsVisible ? 1 : 0);
 
-          const image = group.append('image')
+          group.append('image')
               .attr('class', 'meal-dot')
               .attr('xlink:href', mealIcons[participant.diabetic_level][d.mealType])
               .attr('width', 20)
               .attr('height', 20)
               .attr('x', -10)
               .attr('y', -10)
-              .style('opacity', isMealIconsVisible ? 1 : 0) // Respect toggle state
+              .style('opacity', isMealIconsVisible ? 1 : 0)
               .transition()
               .duration(750);
-  
+
           const dot = g.append('circle')
             .attr('class', 'meal-time-dot')
             .attr('cx', xScale(d.time))
             .attr('cy', yScale(d.glucose))
             .attr('r', 3)
             .attr('fill', diabeticLevelColorScale(participant.diabetic_level));
-  
+
           group.append('rect')
             .attr('width', 20)
             .attr('height', yScale(d.glucose) - (yScale(d.glucose) * 0.7 - 30))
@@ -435,27 +402,18 @@ function updateVisualization() {
             .attr('fill', 'transparent')
             .style('pointer-events', 'all')
             .on('mouseover', function (event) {
-              const [x, y] = d3.pointer(event, this);
-  
-              tooltipDiv.innerHTML = `
+              showTooltip(`
                   <strong>Meal Type:</strong> ${d.mealType}<br>
                   <strong>Carbs:</strong> ${d.carbs} g<br>
                   <strong>Protein:</strong> ${d.protein} g<br>
                   <strong>Fat:</strong> ${d.fat} g<br>
                   <strong>Fiber:</strong> ${d.fiber} g<br>
-              `;
-                
-                tooltipDiv.style.left = (event.pageX + 10) + "px";
-                tooltipDiv.style.top = (event.pageY + 10) + "px";
-                tooltipDiv.style.display = "block";
-  
+              `, event.pageX + 10, event.pageY + 10);
               line.attr('stroke-width', 3);
               dot.attr('r', 5);
             })
             .on('mouseout', function () {
-              tooltipDiv.style.display = "none";
-  
-              // Revert line and dot to original
+              hideTooltip();
               line.attr('stroke-width', 1);
               dot.attr('r', 3);
             });
@@ -477,21 +435,15 @@ function updateVisualization() {
     .attr("y", height / 2)
     .attr("font-size", "14px")
     .text("Select participants to view their glucose data");
-
-
-    const mealColorScale = d3.scaleOrdinal()
-    .domain(['Non-diabetic', 'Pre-diabetic', 'Diabetic'])
-    .range(['#2ecc71', '#f1c40f', '#4059ad']); // Green, Yellow, blue
 }
 
-// Function to load data from a JSON file
 async function loadData() {
   try {
     let [cgMacrosData, bioData] = await Promise.all([
-      d3.json('assets/vis_data/CGMacros.json'),
-      d3.json('assets/vis_data/bio.json')
+      loadCGMacros(),
+      loadBio()
     ]);
-    
+
     const bioMap = new Map(bioData.map(d => [d.PID, d['diabetes level']]));
     const participants = [...new Set(cgMacrosData.map(d => d.PID))];
 
@@ -499,13 +451,6 @@ async function loadData() {
       .domain(participants)
       .range(d3.schemeCategory10);
 
-    function parseTimestamp(timestamp) {
-      const [days, time] = timestamp.split(' days ');
-      const [hours, minutes, seconds] = time.split(':').map(Number);
-      return Number(days) * 24 * 60 + hours * 60 + minutes + seconds / 60;
-    }
-
-    // converting the time and include the relevant nutrients data
     processedData = participants.map(pid => {
       const participantData = cgMacrosData
         .filter(d => d.PID === pid)
@@ -532,7 +477,7 @@ async function loadData() {
         pid,
         values: participantData,
         glucoseMap: glucoseMap,
-        diabetic_level: bioMap.get(pid) // Add diabetic_level to the return object
+        diabetic_level: bioMap.get(pid)
       };
     });
 
@@ -543,80 +488,74 @@ async function loadData() {
   }
 }
 
-// Function to plot the data
 function plotData(participants) {
   const containerWidth = container.node().clientWidth;
   const containerHeight = container.node().clientHeight;
   const width = containerWidth - margin.left - margin.right;
-  const height = containerHeight - margin.top - margin.bottom;
 
-  // Adding a static legend on the top right corner of the line plot
   const legendContainer = svg.append("g")
-  .attr("class", "legend-container")
-  .attr("transform", `translate(${width + margin.right - 250}, ${margin.top})`); // Adjust positioning
+    .attr("class", "legend-container")
+    .attr("transform", `translate(${width + margin.right - 250}, ${margin.top})`);
 
-// === COLOR LEGEND ===
-const legendData = [
-  { label: 'Non-diabetic', color: '#2ecc71' },
-  { label: 'Pre-diabetic', color: '#f1c40f' },
-  { label: 'Diabetic', color: '#4059ad' }
-];
+  const legendData = [
+    { label: 'Non-diabetic', color: '#2ecc71' },
+    { label: 'Pre-diabetic', color: '#f1c40f' },
+    { label: 'Diabetic', color: '#4059ad' }
+  ];
 
-const colorLegend = legendContainer.append("g")
-  .attr("class", "color-legend");
+  const colorLegend = legendContainer.append("g")
+    .attr("class", "color-legend");
 
-colorLegend.selectAll("rect")
-  .data(legendData)
-  .enter()
-  .append("rect")
-  .attr("x", 0)
-  .attr("y", (d, i) => i * 25)
-  .attr("width", 18)
-  .attr("height", 18)
-  .style("fill", d => d.color);
+  colorLegend.selectAll("rect")
+    .data(legendData)
+    .enter()
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", (d, i) => i * 25)
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", d => d.color);
 
-colorLegend.selectAll("text")
-  .data(legendData)
-  .enter()
-  .append("text")
-  .attr("x", 26)
-  .attr("y", (d, i) => i * 25 + 13)
-  .style("font-size", "14px")
-  .style("fill", "#333")
-  .text(d => d.label);
+  colorLegend.selectAll("text")
+    .data(legendData)
+    .enter()
+    .append("text")
+    .attr("x", 26)
+    .attr("y", (d, i) => i * 25 + 13)
+    .style("font-size", "14px")
+    .style("fill", "#333")
+    .text(d => d.label);
 
-// === MEAL ICON LEGEND (Placed Right Next to Color Legend) ===
-const mealLegendData = [
-  { type: "breakfast", label: "Breakfast", icon: "assets/pics/breakfast.png" },
-  { type: "lunch", label: "Lunch", icon: "assets/pics/lunch.png" },
-  { type: "dinner", label: "Dinner", icon: "assets/pics/dinner.png" },
-  { type: "snack", label: "Snack", icon: "assets/pics/snack.png" }
-];
+  const mealLegendData = [
+    { type: "breakfast", label: "Breakfast", icon: BASE + "pics/breakfast.png" },
+    { type: "lunch", label: "Lunch", icon: BASE + "pics/lunch.png" },
+    { type: "dinner", label: "Dinner", icon: BASE + "pics/dinner.png" },
+    { type: "snack", label: "Snack", icon: BASE + "pics/snack.png" }
+  ];
 
-// Position meal legend next to color legend
-const mealLegend = legendContainer.append("g")
-  .attr("class", "meal-legend")
-  .attr("transform", `translate(150, 0)`); // Move meal legend to the right
+  const mealLegend = legendContainer.append("g")
+    .attr("class", "meal-legend")
+    .attr("transform", `translate(150, 0)`);
 
-mealLegend.selectAll("image")
-  .data(mealLegendData)
-  .enter()
-  .append("image")
-  .attr("xlink:href", d => d.icon)
-  .attr("x", 0)
-  .attr("y", (d, i) => i * 25)
-  .attr("width", 18)
-  .attr("height", 18);
+  mealLegend.selectAll("image")
+    .data(mealLegendData)
+    .enter()
+    .append("image")
+    .attr("xlink:href", d => d.icon)
+    .attr("x", 0)
+    .attr("y", (d, i) => i * 25)
+    .attr("width", 18)
+    .attr("height", 18);
 
-mealLegend.selectAll("text")
-  .data(mealLegendData)
-  .enter()
-  .append("text")
-  .attr("x", 26)
-  .attr("y", (d, i) => i * 25 + 13)
-  .style("font-size", "14px")
-  .style("fill", "#333")
-  .text(d => d.label);
+  mealLegend.selectAll("text")
+    .data(mealLegendData)
+    .enter()
+    .append("text")
+    .attr("x", 26)
+    .attr("y", (d, i) => i * 25 + 13)
+    .style("font-size", "14px")
+    .style("fill", "#333")
+    .text(d => d.label);
 
   const timeExtent = [
     d3.min(processedData, d => d3.min(d.values, v => v.time)),
@@ -633,7 +572,9 @@ mealLegend.selectAll("text")
 
   yScale = d3.scaleLinear()
     .domain(glucoseExtent);
-  
+
+  const height = containerHeight - margin.top - margin.bottom;
+
   g.append("g")
     .attr("class", "x-axis")
     .attr("transform", `translate(0, ${height})`);
@@ -644,45 +585,50 @@ mealLegend.selectAll("text")
   g.append("g")
     .attr("class", "grid");
 
-
-  tooltip = d3.select('body').append('div')
-    .attr('class', 'tooltip')
-    .style('opacity', 0);
+  tooltipDiv = getTooltip();
+  tooltip = d3.select(tooltipDiv);
 
   createParticipantButtons(participants);
-  rendering_timeSlider(1, Math.ceil(timeExtent[1] / 1440)); // Initial rendering of the slider
+  rendering_timeSlider(1, Math.ceil(timeExtent[1] / 1440));
 
   updateVisualization();
 }
 
-// Function to load data and plot it
 async function loadDataAndPlot() {
   const participants = await loadData();
   plotData(participants);
 }
 
-// Event listener for window resize to update the visualization and slider
-window.addEventListener('resize', () => {
-  const startDay = Math.round(timeRange[0] / 1440);
-  const endDay = Math.round(timeRange[1] / 1440);
-  updateVisualization();
-  rendering_timeSlider(startDay, endDay); // Re-render the slider with the current positions
-});
+export function init() {
+  container = d3.select('.visualization-wrapper');
+  svg = container.append('svg')
+    .attr('width', '100%')
+    .attr('height', '100%')
+    .attr('viewBox', `0 0 ${container.node().clientWidth} ${container.node().clientHeight}`)
+    .attr('preserveAspectRatio', 'xMidYMid meet');
+  g = svg.append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+  loadDataAndPlot();
 
-// Initial call to load data and plot it
-loadDataAndPlot();
+  window.addEventListener('resize', () => {
+    const startDay = Math.round(timeRange[0] / 1440);
+    const endDay = Math.round(timeRange[1] / 1440);
+    updateVisualization();
+    rendering_timeSlider(startDay, endDay);
+  });
 
-document.getElementById("toggle-meal-icons").addEventListener("change", function() {
-  const isChecked = this.checked;
+  document.getElementById("toggle-meal-icons").addEventListener("change", function() {
+    const isChecked = this.checked;
 
-  d3.selectAll(".meal-dot")
-      .transition()
-      .duration(300)
-      .style("opacity", isChecked ? 1 : 0);
+    d3.selectAll(".meal-dot")
+        .transition()
+        .duration(300)
+        .style("opacity", isChecked ? 1 : 0);
 
-  d3.selectAll(".meal-time-line")
-      .transition()
-      .duration(300)
-      .style("opacity", isChecked ? 1 : 0);
-});
+    d3.selectAll(".meal-time-line")
+        .transition()
+        .duration(300)
+        .style("opacity", isChecked ? 1 : 0);
+  });
+}

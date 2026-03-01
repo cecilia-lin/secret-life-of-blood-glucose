@@ -1,0 +1,89 @@
+/* Navbar Styles */
+.navbar {
+  width: 100%;
+  font-family: "Gluten", monospace;
+  font-size: 1.2em;
+  position: fixed;
+  top: 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  background: white;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.nav-links {
+  display: flex;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  padding: 10px 15px;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover {
+  color: #3182bd;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+progress {
+  position: fixed;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border: none;
+  background: transparent;
+}
+
+progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+progress::-webkit-progress-value {
+  background: linear-gradient(to left,
+  #4059ad,
+  #6b9ac4,
+  #3182bd,
+  #9ecae1,
+  #c6dbef,
+  #eff3ff
+  );
+  background-attachment: fixed;
+}
+
+progress::-moz-progress-bar {
+  background: linear-gradient(to left,
+  #4059ad,
+  #6b9ac4,
+  #3182bd,
+  #9ecae1,
+  #c6dbef,
+  #eff3ff
+  );
+  background-attachment: fixed;
+}
+
+#masthead {
+  position: fixed;
+  display: flex;
+  z-index: 9999;
+}
+
+#masthead a {
+  padding: 1rem 2rem;
+}

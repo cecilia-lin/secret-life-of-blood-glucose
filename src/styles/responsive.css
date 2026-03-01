@@ -1,0 +1,250 @@
+/* Tablet (<=1024px) */
+@media (max-width: 1024px) {
+  h1, h2, h3, h4, p {
+    margin-left: 5%;
+    margin-right: 5%;
+  }
+
+  .highlight {
+    font-size: 3.5rem;
+  }
+
+  .info {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 2.5rem;
+  }
+
+  .paragraph .highlight {
+    font-size: 4rem;
+  }
+
+  .details {
+    width: 70%;
+    font-size: 1.3rem;
+  }
+
+  .section-header {
+    font-size: 2.5rem;
+  }
+
+  .description p {
+    font-size: 1.5rem;
+  }
+
+  /* Panel-2: stack control panel above visualization */
+  #panel-2 {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  #panel-2-flex-container {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  #panel-2-flex-container .control-panel-wrapper {
+    flex: 0 0 auto;
+    height: auto;
+    margin-left: 2%;
+    margin-right: 2%;
+  }
+
+  #panel-2-flex-container .visualization-wrapper {
+    min-height: 500px;
+  }
+
+  .toggle-container {
+    padding: 20px;
+    width: 100%;
+  }
+
+  /* Rolling glucose */
+  #rollig_glu_dot .line-category {
+    height: 20vh;
+  }
+
+  .roll-title {
+    font-size: 1.2rem;
+  }
+
+  /* Plate/mat scaling */
+  .plate {
+    width: 40vmin;
+    font-size: 6vmin;
+  }
+
+  .mat {
+    width: 95%;
+    gap: 5%;
+  }
+}
+
+/* Mobile (<=768px) */
+@media (max-width: 768px) {
+  h1, h2, h3, h4, p {
+    margin-left: 3%;
+    margin-right: 3%;
+    padding: 1%;
+  }
+
+  section {
+    font-size: 1.5rem;
+  }
+
+  .highlight {
+    font-size: 2.5rem;
+    width: auto;
+  }
+
+  .info {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 2rem;
+  }
+
+  .paragraph .highlight {
+    font-size: 3rem;
+    width: auto;
+  }
+
+  .details {
+    width: 90%;
+    font-size: 1.1rem;
+  }
+
+  .section-header {
+    font-size: 2rem;
+  }
+
+  .y-section-header {
+    font-size: 2rem;
+  }
+
+  .description {
+    max-width: 95vw;
+  }
+
+  .description p {
+    font-size: 1.2rem;
+  }
+
+  #question p {
+    font-size: 50px;
+  }
+
+  .navbar {
+    font-size: 0.9em;
+  }
+
+  /* Panel-2 */
+  #panel-2-flex-container .control-panel-wrapper {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .participant-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .toggle-container {
+    padding: 10px;
+  }
+
+  /* Rolling glucose */
+  #rollig_glu_dot {
+    height: auto;
+    min-height: auto;
+    padding: 20px 0;
+  }
+
+  #rollig_glu_dot .line-category {
+    height: 150px;
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .roll-title {
+    font-size: 1rem;
+  }
+
+  /* Plate/mat */
+  .plate {
+    width: 50vmin;
+    font-size: 6vmin;
+  }
+
+  .fork, .knife {
+    height: 40%;
+    width: 8vmin;
+  }
+
+  /* Team list single column */
+  .team-list {
+    grid-template-columns: 1fr;
+  }
+
+  .acknowledgments .description {
+    width: 95vw;
+    padding: 20px;
+  }
+
+  /* Quiz */
+  .quiz-container {
+    padding: 20px;
+    max-width: 95%;
+  }
+
+  .quiz-container h3 {
+    font-size: 1.5rem;
+  }
+
+  /* Distribution plot */
+  #distribution-plot {
+    padding: 1rem;
+    height: auto;
+  }
+
+  #panel-4 .controls-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Instruction */
+  #instruction {
+    padding: 2rem 1rem;
+  }
+
+  #ui {
+    width: 95%;
+  }
+
+  /* Stats */
+  .stats-container {
+    margin-top: 15px;
+  }
+
+  .count {
+    min-width: 60px;
+  }
+
+  /* Page buttons */
+  .page__button {
+    width: 80%;
+    font-size: 16px;
+  }
+
+  /* Meal frequency */
+  #meal_frequency {
+    height: auto;
+    min-height: auto;
+    padding: 20px 0;
+  }
+}

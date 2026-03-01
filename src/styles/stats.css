@@ -1,0 +1,46 @@
+.stats {
+  width: 100%;
+}
+
+/* Stats Container */
+.stats-container {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+  gap: 20px;
+}
+
+.stats-container h1 {
+  margin: auto;
+}
+
+.subtitle {
+  font-size: 3.5rem;
+  font-weight: bold;
+  color: var(--color-blue);
+}
+
+/* Small Text */
+.info {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  color: black;
+}
+
+#hook {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+
+/* Count Animation */
+.count {
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+}
