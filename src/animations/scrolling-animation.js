@@ -318,5 +318,32 @@ export function init() {
     )
     .to({}, { duration: 1 });                                   // hold answer visible
 
+  // === Glucose text slide crossfade ===
+  let gluTl = gsap.timeline({
+    scrollTrigger: {
+      trigger: "#rollig_glu_dot",
+      start: "top top",
+      end: "+=500%",
+      scrub: true,
+      pin: true,
+      pinSpacing: true,
+    }
+  });
+
+  gluTl
+    .to({}, { duration: 1 })                                        // hold slide 1
+    .to("#glu-slide-1", { opacity: 0, y: -30, duration: 0.5 })
+    .fromTo("#glu-slide-2", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5 }, "<")
+    .to({}, { duration: 1 })                                        // hold slide 2
+    .to("#glu-slide-2", { opacity: 0, y: -30, duration: 0.5 })
+    .fromTo("#glu-slide-3", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5 }, "<")
+    .to({}, { duration: 1 })                                        // hold slide 3
+    .to("#glu-slide-3", { opacity: 0, y: -30, duration: 0.5 })
+    .fromTo("#glu-slide-4", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5 }, "<")
+    .to({}, { duration: 1 })                                        // hold slide 4
+    .to("#glu-slide-4", { opacity: 0, y: -30, duration: 0.5 })
+    .fromTo("#glu-slide-5", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5 }, "<")
+    .to({}, { duration: 1 });                                       // hold slide 5
+
   console.log('[scroll-anim] init() complete');
 }

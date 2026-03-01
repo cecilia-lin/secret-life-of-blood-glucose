@@ -36,7 +36,7 @@ async function loadData() {
   }
 }
 
-function createGlucoseLineChart(container, data, groupColor, yScale) {
+function createGlucoseLineChart(container, data, groupColor, yScale, pid, isFirst, isBottomRow) {
   function formatTime(index) {
     const totalMinutes = index * minutesPerReading;
     const day = Math.floor(totalMinutes / 1440);
@@ -61,16 +61,23 @@ function createGlucoseLineChart(container, data, groupColor, yScale) {
 
     const tickCount = getTickCount(width);
 
-    xAxisGroup.call(d3.axisBottom(xScale)
-        .ticks(tickCount)
-        .tickFormat(d => formatTime(d)));
+    if (isBottomRow) {
+      xAxisGroup.call(d3.axisBottom(xScale)
+          .ticks(tickCount)
+          .tickFormat(d => formatTime(d)));
 
-    xAxisGroup.selectAll("text")
-        .attr("dy", "1em")
-        .attr("transform", "rotate(-25)")
-        .style("text-anchor", "end");
+      xAxisGroup.selectAll("text")
+          .attr("dy", "1em")
+          .attr("transform", "rotate(-25)")
+          .style("text-anchor", "end");
+    } else {
+      xAxisGroup.call(d3.axisBottom(xScale).ticks(0).tickSize(0));
+      xAxisGroup.selectAll("text").remove();
+    }
 
-    yAxisGroup.call(d3.axisLeft(yScale).ticks(5));
+    if (isFirst) {
+      yAxisGroup.call(d3.axisLeft(yScale).ticks(5));
+    }
 
     yGrid.selectAll("line").remove();
     yGrid.selectAll("line")
@@ -123,14 +130,16 @@ function createGlucoseLineChart(container, data, groupColor, yScale) {
 
     const tickCount = getTickCount(width);
 
-    xAxisGroup.call(d3.axisBottom(xScale)
-        .ticks(tickCount)
-        .tickFormat(d => formatTime(d)));
+    if (isBottomRow) {
+      xAxisGroup.call(d3.axisBottom(xScale)
+          .ticks(tickCount)
+          .tickFormat(d => formatTime(d)));
 
-    xAxisGroup.selectAll("text")
-        .attr("dy", "1em")
-        .attr("transform", "rotate(-25)")
-        .style("text-anchor", "end");
+      xAxisGroup.selectAll("text")
+          .attr("dy", "1em")
+          .attr("transform", "rotate(-25)")
+          .style("text-anchor", "end");
+    }
 
     updateXGrid(tickCount);
 
@@ -146,7 +155,7 @@ function createGlucoseLineChart(container, data, groupColor, yScale) {
     setTimeout(animate, 20);
   }
 
-  const chartMargin = { top: -5, right: 10, bottom: 40, left: 50 };
+  const chartMargin = { top: -5, right: 10, bottom: isBottomRow ? 40 : 10, left: isFirst ? 50 : 10 };
   const svgEl = container.append("svg")
       .attr('class', 'rolling_glucose_svg')
       .attr("width", `100%`)
@@ -206,16 +215,18 @@ function createGlucoseLineChart(container, data, groupColor, yScale) {
   const yAxisGroup = svgEl.append("g")
       .attr("class", "y-axis");
 
-  svgEl.append("text")
-      .attr("class", "y-axis-label")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -height / 2)
-      .attr("y", -chartMargin.left + 15)
-      .attr("text-anchor", "middle")
-      .style("font-family", "Arial, sans-serif")
-      .style("font-size", "12px")
-      .style("fill", "gray")
-      .text("Glucose (mg/dL)");
+  if (isFirst) {
+    svgEl.append("text")
+        .attr("class", "y-axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -chartMargin.left + 15)
+        .attr("text-anchor", "middle")
+        .style("font-family", "Arial, sans-serif")
+        .style("font-size", "12px")
+        .style("fill", "gray")
+        .text("Glucose (mg/dL)");
+  }
 
   let animationRunning = false;
 
@@ -278,33 +289,33 @@ async function loadDataAndCreateCharts() {
       .domain([globalMin, globalMax])
       .range([100 - 5, 5]);
 
-  Object.entries(groups).forEach(([group, participants]) => {
+  const groupEntries = Object.entries(groups);
+  groupEntries.forEach(([group, participants], groupIdx) => {
     const groupContainer = d3.select(`#${group.replace(" ", "-").toLowerCase()}-vis`)
         .style('position', 'relative');
+    const isBottomRow = groupIdx === groupEntries.length - 1;
 
-    Object.entries(participants).forEach(([pid, entries]) => {
+    Object.entries(participants).forEach(([pid, entries], idx) => {
       const participantDiv = groupContainer.append("div")
           .attr("class", "participant-section")
           .style("display", "flex")
+          .style("flex-direction", "column")
           .style("width", `calc(20% - 10px)`)
           .style('height', `100%`)
           .style('padding', '5px')
           .style('position', 'relative');
 
-      groupContainer.append("div")
+      participantDiv.append("div")
           .attr("class", "participant-title")
           .style("font-size", "10px")
           .style("font-weight", "bold")
           .style("text-align", "center")
-          .style("width", "100%")
-          .style("z-index", "3")
-          .style("padding", "5px")
           .style("color", "#555")
-          .style("margin-top", "-60px")
           .text(`Participant ${pid}`);
 
       const color = getColorForGroup(group);
-      const chart = createGlucoseLineChart(participantDiv, entries, color, globalYScale, pid);
+      const isFirst = idx === 0;
+      const chart = createGlucoseLineChart(participantDiv, entries, color, globalYScale, pid, isFirst, isBottomRow);
       charts.push(chart);
     });
   });
