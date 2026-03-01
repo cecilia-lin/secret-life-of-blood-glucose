@@ -7,28 +7,38 @@ function getColorForGroup(group) {
   return GROUP_COLORS[group] || '#000000';
 }
 
-const steps = ["All", "Breakfast", "Lunch", "Dinner", "Snack"];
+const steps = ["All", "Breakfast", "Lunch", "Dinner", "Snack", "Analysis"];
 
 const stepNotes = {
   "All": {
     title: "Meal Frequency Overview",
-    body: "Each vertical line represents a meal event. Notice how the density and regularity of meals varies across groups over the 10-day period."
+    body: "Each vertical line represents a meal event. Notice how the density and regularity of meals varies across groups over the 10-day period.",
+    filter: "All"
   },
   "Breakfast": {
     title: "Protein Shake",
-    body: "Identical protein shake for all participants. Controlled morning meal to establish baseline."
+    body: "Identical protein shake for all participants. Controlled morning meal to establish baseline.",
+    filter: "Breakfast"
   },
   "Lunch": {
     title: "Chipotle Meal",
-    body: "Standardized Chipotle meal for all participants. Controlled portions and ingredients."
+    body: "Standardized Chipotle meal for all participants. Controlled portions and ingredients.",
+    filter: "Lunch"
   },
   "Dinner": {
     title: "Evening Meal",
-    body: "Participants' own choice of dinner. Varied meal compositions."
+    body: "Participants' own choice of dinner. Varied meal compositions.",
+    filter: "Dinner"
   },
   "Snack": {
+    title: "Snack Frequency",
+    body: "This is how often each group snacks between meals over the 10-day period. Take a look at the differences across the three groups.",
+    filter: "Snack"
+  },
+  "Analysis": {
     title: "You might have already noticed",
-    body: "Participants with diabetes don't eat snacks very often. It seems like their eating habits is rigid with fixed meal times."
+    body: "<ul><li>Diabetic group rarely eats snacks</li><li>They follow rigid, fixed meal times</li></ul>",
+    filter: "Snack"
   }
 };
 
@@ -157,11 +167,11 @@ export function init() {
       const note = stepNotes[mealType];
 
       // Update charts
-      updateGraphs(mealType);
+      updateGraphs(note.filter);
 
       // Update note card
       document.querySelector('.meal-note-title').textContent = note.title;
-      document.querySelector('.meal-note-body').textContent = note.body;
+      document.querySelector('.meal-note-body').innerHTML = note.body;
 
       // Update step indicator dots
       const indicator = document.querySelector('.meal-step-indicator');
