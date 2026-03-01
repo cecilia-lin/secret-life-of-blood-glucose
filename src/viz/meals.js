@@ -7,36 +7,35 @@ function getColorForGroup(group) {
   return GROUP_COLORS[group] || '#000000';
 }
 
+const steps = ["All", "Breakfast", "Lunch", "Dinner", "Snack"];
+
+const stepNotes = {
+  "All": {
+    title: "Meal Frequency Overview",
+    body: "Each vertical line represents a meal event. Notice how the density and regularity of meals varies across groups over the 10-day period."
+  },
+  "Breakfast": {
+    title: "Protein Shake",
+    body: "Identical protein shake for all participants. Controlled morning meal to establish baseline."
+  },
+  "Lunch": {
+    title: "Chipotle Meal",
+    body: "Standardized Chipotle meal for all participants. Controlled portions and ingredients."
+  },
+  "Dinner": {
+    title: "Evening Meal",
+    body: "Participants' own choice of dinner. Varied meal compositions."
+  },
+  "Snack": {
+    title: "You might have already noticed",
+    body: "Participants with diabetes don't eat snacks very often. It seems like their eating habits is rigid with fixed meal times."
+  }
+};
+
+let currentStep = 0;
+
 export function init() {
   const tooltipDiv = getTooltip();
-
-  let mealInfoBox = d3.select("body").append("div")
-    .attr("class", "meal-info-box")
-    .style("position", "fixed")
-    .style("display", "none")
-    .style("background", "rgba(0, 0, 0, 0.8)")
-    .style("color", "white")
-    .style("border-radius", "10px")
-    .style("padding", "15px")
-    .style("width", "300px")
-    .style("pointer-events", "none")
-    .style("z-index", "1000");
-
-  const selectContainer = document.querySelector("#select");
-
-  const mealTypes = ["All", "Breakfast", "Lunch", "Dinner", "Snack"];
-  const mealDropdown = document.createElement("select");
-  mealDropdown.id = "meal-filter";
-  mealDropdown.style.marginRight = "10px";
-
-  mealTypes.forEach(type => {
-    let option = document.createElement("option");
-    option.value = type;
-    option.textContent = type;
-    mealDropdown.appendChild(option);
-  });
-
-  selectContainer.appendChild(mealDropdown);
 
   loadMealData().then(data => {
     const parseTime = d3.timeParse("%d days %H:%M:%S");
@@ -52,7 +51,7 @@ export function init() {
     maxTime.setDate(maxTime.getDate() + 9);
     maxTime.setHours(23, 59, 59, 999);
 
-    const height = 200;
+    const height = 120;
     const margin = {top: 40, right: 50, bottom: 50, left: 60};
 
     function createGraph(group, graphId, title) {
@@ -141,9 +140,8 @@ export function init() {
         .text(title);
     }
 
-    function updateGraphs() {
-      const selectedMealType = mealDropdown.value;
-      const filteredData = selectedMealType === "All" ? data : data.filter(d => d["Meal Type"].toLowerCase() === selectedMealType.toLowerCase());
+    function updateGraphs(mealType) {
+      const filteredData = mealType === "All" ? data : data.filter(d => d["Meal Type"].toLowerCase() === mealType.toLowerCase());
 
       d3.select("#graph-nondiabetic").html("");
       d3.select("#graph-prediabetic").html("");
@@ -153,85 +151,48 @@ export function init() {
       createGraph(filteredData.filter(d => d['diabetes level'] === 'Diabetic'), "graph-diabetic", "Diabetic Group");
     }
 
-    mealDropdown.addEventListener("change", function(event) {
-      const selectedMeal = event.target.value;
-      if (selectedMeal !== "All") {
-        const mealInfo = {
-          "Breakfast": {
-            title: "Protein Shake",
-            details: [
-              "Identical protein shake for all participants",
-              "Controlled morning meal to establish baseline",
-            ]
-          },
-          "Lunch": {
-            title: "Chipotle Meal",
-            details: [
-              "Standardized Chipotle meal for all participants",
-              "Controlled portions and ingredients",
-            ]
-          },
-          "Dinner": {
-            title: "Evening Meal",
-            details: [
-              "Participants' own choice of dinner",
-              "Varied meal compositions",
-            ]
-          },
-          "Snack": {
-            title: "You might have already noticed",
-            details: [
-              "Participants with diabetes don't eat snacks very often",
-              "It seems like their eating habits is rigid with fixed meal times"
-            ]
-          }
-        };
+    function goToStep(index) {
+      currentStep = index;
+      const mealType = steps[currentStep];
+      const note = stepNotes[mealType];
 
-        const info = mealInfo[selectedMeal];
+      // Update charts
+      updateGraphs(mealType);
 
-        const dropdownRect = mealDropdown.getBoundingClientRect();
+      // Update note card
+      document.querySelector('.meal-note-title').textContent = note.title;
+      document.querySelector('.meal-note-body').textContent = note.body;
 
-        mealInfoBox
-          .html(`
-            <div>
-              <div style="font-size: 20px; margin-bottom: 10px;">${info.title}</div>
-              <div style="font-size: 16px;">
-                ${info.details.map(detail => `<div style="margin: 5px 0;">${detail}</div>`).join('')}
-              </div>
-            </div>
-          `)
-          .style("display", "block")
-          .style("left", `${dropdownRect.right + 10}px`)
-          .style("top", `${dropdownRect.top}px`);
-      } else {
-        mealInfoBox.style("display", "none");
-      }
+      // Update step indicator dots
+      const indicator = document.querySelector('.meal-step-indicator');
+      indicator.innerHTML = steps.map((_, i) =>
+        `<span class="dot${i === currentStep ? ' active' : ''}"></span>`
+      ).join('');
 
-      updateGraphs();
+      // Update button states
+      document.getElementById('meal-back').disabled = currentStep === 0;
+      document.getElementById('meal-next').disabled = currentStep === steps.length - 1;
+    }
+
+    // Nav button listeners
+    document.getElementById('meal-back').addEventListener('click', () => {
+      if (currentStep > 0) goToStep(currentStep - 1);
     });
 
-    updateGraphs();
+    document.getElementById('meal-next').addEventListener('click', () => {
+      if (currentStep < steps.length - 1) goToStep(currentStep + 1);
+    });
+
+    // Initialize
+    goToStep(0);
+
+    let mealsResizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(mealsResizeTimer);
+      mealsResizeTimer = setTimeout(() => {
+        goToStep(currentStep);
+      }, 250);
+    });
 
   }).catch(error => console.error("Error loading the JSON data:", error));
-
-  document.addEventListener("click", function(event) {
-    const mealDropdownEl = document.getElementById("meal-filter");
-    if (event.target !== mealDropdownEl) {
-      d3.select(".meal-info-box").style("display", "none");
-    }
-  });
-
-  let mealsResizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(mealsResizeTimer);
-    mealsResizeTimer = setTimeout(() => {
-      d3.select("#graph-nondiabetic").html("");
-      d3.select("#graph-prediabetic").html("");
-      d3.select("#graph-diabetic").html("");
-      const mealDropdownEl = document.getElementById("meal-filter");
-      if (mealDropdownEl) {
-        mealDropdownEl.dispatchEvent(new Event('change'));
-      }
-    }, 250);
-  });
 }

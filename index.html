@@ -161,11 +161,23 @@
             </section>
 
             <section id="meal_frequency" class="full-screen">
-                <div class="container">
-                    <div id="select" class="dropdown"></div>
-                    <div id="graph-nondiabetic" class="graph-container"></div>
-                    <div id="graph-prediabetic" class="graph-container"></div>
-                    <div id="graph-diabetic" class="graph-container"></div>
+                <div class="meal-layout">
+                    <div class="meal-charts-panel">
+                        <div id="graph-nondiabetic" class="graph-container"></div>
+                        <div id="graph-prediabetic" class="graph-container"></div>
+                        <div id="graph-diabetic" class="graph-container"></div>
+                    </div>
+                    <div class="meal-notes-panel">
+                        <div class="meal-note-card">
+                            <h3 class="meal-note-title"></h3>
+                            <p class="meal-note-body"></p>
+                        </div>
+                        <div class="meal-nav">
+                            <button id="meal-back" class="meal-nav-btn">&larr; Back</button>
+                            <span class="meal-step-indicator"></span>
+                            <button id="meal-next" class="meal-nav-btn">Next &rarr;</button>
+                        </div>
+                    </div>
                 </div>
             </section>
 

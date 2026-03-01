@@ -247,4 +247,13 @@
     min-height: auto;
     padding: 20px 0;
   }
+
+  .meal-layout {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .meal-notes-panel {
+    position: static;
+  }
 }
