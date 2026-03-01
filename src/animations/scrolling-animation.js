@@ -296,5 +296,27 @@ export function init() {
     });
   });
 
+  // === Meal question → answer scroll-reveal ===
+  let mealTl = gsap.timeline({
+    scrollTrigger: {
+      trigger: "#meal-qa",
+      start: "top top",
+      end: "+=300%",
+      scrub: true,
+      pin: true,
+      pinSpacing: true,
+    }
+  });
+
+  mealTl
+    .to({}, { duration: 1 })                                    // hold question visible
+    .to("#meal-question", { opacity: 0, y: -30, duration: 0.5 })
+    .fromTo("#meal-answer",
+      { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 0.5 },
+      "<"
+    )
+    .to({}, { duration: 1 });                                   // hold answer visible
+
   console.log('[scroll-anim] init() complete');
 }
