@@ -27,7 +27,6 @@ async function fetchData() {
 }
 
 function plotData(nonDiabeticParticipants, cgmData, mealData) {
-  console.log('[metrics-explain] plotData() called');
   const pidCounts = {};
   cgmData.forEach(d => {
     if (!pidCounts[d.PID]) pidCounts[d.PID] = 0;
@@ -55,20 +54,25 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
 
   const parseTime = (timestamp) => {
     try {
-      let timeParts;
-      if (timestamp.includes(":")) {
-        if (timestamp.split(" ").length >= 3) {
-          timeParts = timestamp.split(" ")[2].split(":");
-        } else {
-          timeParts = timestamp.split(" ").find(part => part.includes(":")).split(":");
-        }
+      // Handle Date objects directly
+      if (timestamp instanceof Date) {
+        const hours = timestamp.getHours();
+        const minutes = timestamp.getMinutes();
+        const decimalHours = hours + minutes / 60;
+        return decimalHours < 12 ? decimalHours : null;
+      }
+      // Handle string timestamps (e.g., "1 days 06:47:00")
+      const str = String(timestamp);
+      if (str.includes(":")) {
+        const timePart = str.split(" ").find(part => part.includes(":"));
+        if (!timePart) return null;
+        const timeParts = timePart.split(":");
         const hours = parseInt(timeParts[0]);
         const minutes = parseInt(timeParts[1]);
         const decimalHours = hours + minutes / 60;
         return decimalHours < 12 ? decimalHours : null;
-      } else {
-        return null;
       }
+      return null;
     } catch (error) {
       console.error("Error parsing timestamp:", timestamp, error);
       return null;
@@ -194,41 +198,76 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
     .attr("fill", "steelblue")
     .style("opacity", 0);
 
-  // --- Build all annotation elements into a group, hidden initially ---
-  const annotationsGroup = svg.append("g")
-    .attr("class", "annotations-group")
+  // --- Annotation groups ---
+  const mealLinesGroup = svg.append("g")
+    .attr("class", "meal-lines-group")
     .style("opacity", 0);
 
-  // Debug: log all meals for this participant to understand Timestamp format
+  // Hover group — tooltips + hit rects, hidden until all lines drawn
+  const hoverGroup = svg.append("g")
+    .attr("class", "hover-group")
+    .style("pointer-events", "none");
+
+  // Narration text box
+  const narrationGroup = svg.append("g")
+    .attr("class", "narration-group")
+    .attr("transform", `translate(20, 20)`)
+    .style("opacity", 0);
+
+  narrationGroup.append("rect")
+    .attr("x", 0).attr("y", 0)
+    .attr("width", 420).attr("height", 40)
+    .attr("fill", "white").attr("fill-opacity", 0.85)
+    .attr("stroke", "#ccc").attr("stroke-width", 1)
+    .attr("rx", 8).attr("ry", 8);
+
+  const narrationText = narrationGroup.append("text")
+    .attr("x", 15).attr("y", 26)
+    .attr("fill", "#333")
+    .style("font-size", "15px")
+    .style("font-weight", "500")
+    .text("");
+
+  // Filter meals for this participant
   const allMealsForPid = mealData.filter(d => String(d.PID) === String(onlyParticipant.pid));
-  console.log('[metrics-explain] PID:', onlyParticipant.pid);
-  console.log('[metrics-explain] all meals for participant:', allMealsForPid.map(d => ({
-    Timestamp: d.Timestamp,
-    type: typeof d.Timestamp,
-    MealType: d["Meal Type"],
-  })));
 
-  const mealForParticipant = mealData.filter(d => {
-    const ts = String(d.Timestamp);
-    return String(d.PID) === String(onlyParticipant.pid) &&
-      (ts.startsWith("1 days") || ts.startsWith("1 day") || ts.includes("Day 1")) &&
-      (d["Meal Type"] === "breakfast" || d["Meal Type"] === "lunch");
-  });
+  // Find the earliest date to identify "Day 1"
+  const firstMealDate = allMealsForPid.reduce((min, d) => {
+    const t = d.Timestamp instanceof Date ? d.Timestamp : new Date(d.Timestamp);
+    return t < min ? t : min;
+  }, new Date(9999, 0));
 
-  console.log('[metrics-explain] filtered meals:', mealForParticipant.length, mealForParticipant);
+  // Helper: check if a timestamp falls on the same calendar day as firstMealDate
+  function isDay1(ts) {
+    // Handle string timestamps (e.g., "1 days 06:47:00")
+    if (typeof ts === 'string') {
+      return ts.startsWith("1 days") || ts.startsWith("1 day") || ts.includes("Day 1");
+    }
+    // Handle Date objects
+    const d = ts instanceof Date ? ts : new Date(ts);
+    return d.getFullYear() === firstMealDate.getFullYear() &&
+           d.getMonth() === firstMealDate.getMonth() &&
+           d.getDate() === firstMealDate.getDate();
+  }
+
+  const mealForParticipant = allMealsForPid.filter(d =>
+    isDay1(d.Timestamp) &&
+    (d["Meal Type"] === "breakfast" || d["Meal Type"] === "lunch")
+  );
+
+  console.log('[metrics-explain] First meal date:', firstMealDate, 'Day 1 meals found:', mealForParticipant.length);
 
   const breakfastMeal = mealForParticipant.find(d => d["Meal Type"] === "breakfast");
   const lunchMeal = mealForParticipant.find(d => d["Meal Type"] === "lunch");
 
   if (!breakfastMeal || !lunchMeal) {
     console.error('[metrics-explain] Missing meal data. breakfast:', breakfastMeal, 'lunch:', lunchMeal);
-    // Still set up ScrollTrigger even without annotations
-    setupScrollAnimation(path, totalLength, trackingDot, annotationsGroup);
+    setupScrollAnimation({ path, totalLength, trackingDot, mealLinesGroup, dots: [], excTimeLines: [], excLines: [], recLines: [], hoverGroup, narrationGroup, narrationText });
     return;
   }
 
-  let breakfast_startTime = parseTime(String(breakfastMeal.Timestamp));
-  let lunch_startTime = parseTime(String(lunchMeal.Timestamp));
+  let breakfast_startTime = parseTime(breakfastMeal.Timestamp);
+  let lunch_startTime = parseTime(lunchMeal.Timestamp);
 
   let breakfast_start_glucose_value = onlyParticipant.data
     .find(d => d.time === breakfast_startTime).value;
@@ -248,21 +287,22 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
   let lunch_glucose_excursion_value = onlyParticipant.data
     .find(d => d.time === lunch_glucose_excursion_time).value;
 
-  let breakfast_glucose_recovery_time = onlyParticipant.data
+  let breakfast_recovery_point = onlyParticipant.data
     .filter(d => d.time > breakfast_startTime && d.time <= (breakfast_startTime + 3) && d.value <= breakfast_start_glucose_value)
-    .reduce((acc, d) => d.time < acc.time ? d : acc, { time: Infinity }).time;
-  let lunch_glucose_recovery_time = onlyParticipant.data
-    .filter(d => d.time > lunch_startTime && d.time <= (lunch_startTime + 3) && d.value <= lunch_start_glucose_value)
-    .reduce((acc, d) => d.time < acc.time ? d : acc, { time: Infinity }).time;
-  let breakfast_glucose_recovery_value = onlyParticipant.data
-    .find(d => d.time === breakfast_glucose_recovery_time).value;
-  let lunch_glucose_recovery_value = onlyParticipant.data
-    .find(d => d.time === lunch_glucose_recovery_time).value;
+    .reduce((acc, d) => d.time < acc.time ? d : acc, { time: Infinity, value: 0 });
+  let breakfast_glucose_recovery_time = breakfast_recovery_point.time;
+  let breakfast_glucose_recovery_value = breakfast_recovery_point.value;
 
-  // Meal dashed lines and labels
+  let lunch_recovery_point = onlyParticipant.data
+    .filter(d => d.time > lunch_startTime && d.time <= (lunch_startTime + 3) && d.value <= lunch_start_glucose_value)
+    .reduce((acc, d) => d.time < acc.time ? d : acc, { time: Infinity, value: 0 });
+  let lunch_glucose_recovery_time = lunch_recovery_point.time;
+  let lunch_glucose_recovery_value = lunch_recovery_point.value;
+
+  // --- Meal dashed lines and labels (fade in as group) ---
   mealForParticipant.forEach(d => {
     const mealTime = parseTime(d.Timestamp);
-    annotationsGroup.append("line")
+    mealLinesGroup.append("line")
       .attr("x1", x(mealTime))
       .attr("x2", x(mealTime))
       .attr("y1", 0)
@@ -272,7 +312,7 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
       .append("title")
       .text(`Meal: ${d["Meal Type"]}`);
 
-    annotationsGroup.append("text")
+    mealLinesGroup.append("text")
       .attr("x", x(mealTime))
       .attr("y", -10)
       .attr("text-anchor", "middle")
@@ -281,244 +321,215 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
       .text(d["Meal Type"]);
   });
 
-  // Glucose excursion time lines
-  annotationsGroup.append("line")
-    .attr("x1", x(breakfast_startTime))
-    .attr("x2", x(breakfast_glucose_excursion_time))
-    .attr("y1", y(breakfast_start_glucose_value))
-    .attr("y2", y(breakfast_start_glucose_value))
-    .attr("stroke", "red")
-    .attr("stroke-width", 2)
-    .attr("class", "hover-line-ge");
+  // Debug: log computed positions
+  console.log('[metrics-explain] Computed values:', {
+    breakfast_startTime, lunch_startTime,
+    breakfast_start_glucose_value, lunch_start_glucose_value,
+    breakfast_glucose_excursion_time, lunch_glucose_excursion_time,
+    breakfast_glucose_excursion_value, lunch_glucose_excursion_value,
+    breakfast_glucose_recovery_time, lunch_glucose_recovery_time,
+  });
+  console.log('[metrics-explain] Pixel positions:', {
+    bf_start_x: x(breakfast_startTime), bf_start_y: y(breakfast_start_glucose_value),
+    bf_peak_x: x(breakfast_glucose_excursion_time), bf_peak_y: y(breakfast_glucose_excursion_value),
+    bf_recovery_x: x(breakfast_glucose_recovery_time), bf_recovery_y: y(breakfast_start_glucose_value),
+    lu_start_x: x(lunch_startTime), lu_start_y: y(lunch_start_glucose_value),
+    lu_peak_x: x(lunch_glucose_excursion_time), lu_peak_y: y(lunch_glucose_excursion_value),
+    lu_recovery_x: x(lunch_glucose_recovery_time), lu_recovery_y: y(lunch_start_glucose_value),
+  });
 
-  annotationsGroup.append("line")
-    .attr("x1", x(lunch_startTime))
-    .attr("x2", x(lunch_glucose_excursion_time))
-    .attr("y1", y(lunch_start_glucose_value))
-    .attr("y2", y(lunch_start_glucose_value))
-    .attr("stroke", "red")
-    .attr("stroke-width", 2)
-    .attr("class", "hover-line-ge");
+  // --- Individual dots (start at r=0, pop in via r animation) ---
+  const dots = [
+    // Breakfast: start, peak, recovery
+    svg.append("circle").attr("cx", x(breakfast_startTime)).attr("cy", y(breakfast_start_glucose_value)).attr("r", 0).attr("fill", "red"),
+    svg.append("circle").attr("cx", x(breakfast_glucose_excursion_time)).attr("cy", y(breakfast_glucose_excursion_value)).attr("r", 0).attr("fill", "red"),
+    svg.append("circle").attr("cx", x(breakfast_glucose_recovery_time)).attr("cy", y(breakfast_glucose_recovery_value)).attr("r", 0).attr("fill", "red"),
+    // Lunch: start, peak, recovery
+    svg.append("circle").attr("cx", x(lunch_startTime)).attr("cy", y(lunch_start_glucose_value)).attr("r", 0).attr("fill", "red"),
+    svg.append("circle").attr("cx", x(lunch_glucose_excursion_time)).attr("cy", y(lunch_glucose_excursion_value)).attr("r", 0).attr("fill", "red"),
+    svg.append("circle").attr("cx", x(lunch_glucose_recovery_time)).attr("cy", y(lunch_glucose_recovery_value)).attr("r", 0).attr("fill", "red"),
+  ];
+  console.log('[metrics-explain] Created', dots.length, 'dots. Nodes:', dots.map((d, i) => ({
+    i, cx: d.attr("cx"), cy: d.attr("cy"), r: d.attr("r"), node: d.node().tagName
+  })));
 
-  // Dots for excursion time
-  annotationsGroup.append("circle").attr("cx", x(breakfast_startTime)).attr("cy", y(breakfast_start_glucose_value)).attr("r", 5).attr("fill", "red");
-  annotationsGroup.append("circle").attr("cx", x(breakfast_glucose_excursion_time)).attr("cy", y(breakfast_start_glucose_value)).attr("r", 5).attr("fill", "red");
-  annotationsGroup.append("circle").attr("cx", x(lunch_startTime)).attr("cy", y(lunch_start_glucose_value)).attr("r", 5).attr("fill", "red");
-  annotationsGroup.append("circle").attr("cx", x(lunch_glucose_excursion_time)).attr("cy", y(lunch_start_glucose_value)).attr("r", 5).attr("fill", "red");
+  // --- Helper: create a line hidden via stroke-dashoffset for draw animation ---
+  function createAnimLine(x1Val, y1Val, x2Val, y2Val, cls) {
+    const line = svg.append("line")
+      .attr("x1", x1Val).attr("y1", y1Val)
+      .attr("x2", x2Val).attr("y2", y2Val)
+      .attr("stroke", "red").attr("stroke-width", 2)
+      .attr("class", cls);
+    const len = Math.sqrt((x2Val - x1Val) ** 2 + (y2Val - y1Val) ** 2);
+    line.attr("stroke-dasharray", len).attr("stroke-dashoffset", len);
+    return line;
+  }
 
-  // Hover text for glucose excursion time
-  const hoverTextGroup = annotationsGroup.append("g")
-    .style("display", "none")
-    .attr("transform", `translate(${margin.left + 20}, ${margin.top + 20})`);
+  // Excursion time horizontal lines (drawn first)
+  const bfExcTimeLine = createAnimLine(
+    x(breakfast_startTime), y(breakfast_start_glucose_value),
+    x(breakfast_glucose_excursion_time), y(breakfast_start_glucose_value), "hover-line-ge");
+  const luExcTimeLine = createAnimLine(
+    x(lunch_startTime), y(lunch_start_glucose_value),
+    x(lunch_glucose_excursion_time), y(lunch_start_glucose_value), "hover-line-ge");
+
+  // Excursion vertical lines (drawn second)
+  const bfExcLine = createAnimLine(
+    x(breakfast_glucose_excursion_time), y(breakfast_start_glucose_value),
+    x(breakfast_glucose_excursion_time), y(breakfast_glucose_excursion_value), "hover-line-ex");
+  const luExcLine = createAnimLine(
+    x(lunch_glucose_excursion_time), y(lunch_start_glucose_value),
+    x(lunch_glucose_excursion_time), y(lunch_glucose_excursion_value), "hover-line-ex");
+
+  // Recovery horizontal lines (drawn third)
+  const bfRecLine = createAnimLine(
+    x(breakfast_glucose_excursion_time), y(breakfast_start_glucose_value),
+    x(breakfast_glucose_recovery_time), y(breakfast_glucose_recovery_value), "hover-line-gr");
+  const luRecLine = createAnimLine(
+    x(lunch_glucose_excursion_time), y(lunch_start_glucose_value),
+    x(lunch_glucose_recovery_time), y(lunch_glucose_recovery_value), "hover-line-gr");
+
+  console.log('[metrics-explain] Lines created:', {
+    bfExcTimeLine: { dasharray: bfExcTimeLine.attr("stroke-dasharray"), dashoffset: bfExcTimeLine.attr("stroke-dashoffset"), x1: bfExcTimeLine.attr("x1"), x2: bfExcTimeLine.attr("x2") },
+    bfExcLine: { dasharray: bfExcLine.attr("stroke-dasharray"), dashoffset: bfExcLine.attr("stroke-dashoffset"), y1: bfExcLine.attr("y1"), y2: bfExcLine.attr("y2") },
+    bfRecLine: { dasharray: bfRecLine.attr("stroke-dasharray"), dashoffset: bfRecLine.attr("stroke-dashoffset"), x1: bfRecLine.attr("x1"), x2: bfRecLine.attr("x2") },
+  });
+
+  // --- Hover tooltips (in hoverGroup, activated after all lines drawn) ---
+
+  // Tooltip for excursion time
+  const hoverTextGroup = hoverGroup.append("g")
+    .style("display", "none");
 
   hoverTextGroup.append("rect")
     .attr("x", 0).attr("y", 0).attr("width", 300).attr("height", 120)
     .attr("fill", "black").attr("opacity", 0.7).attr("rx", 10).attr("ry", 10);
 
   const textContainer1 = hoverTextGroup.append("g").attr("class", "paragraph");
-
   textContainer1.append("text")
     .attr("class", "y-section-header").attr("x", 15).attr("y", 30)
     .attr("fill", "white").style("font-size", "20px").text("Glucose Excursion Time");
-
   const detailsText1 = textContainer1.append("text")
     .attr("class", "details").attr("x", 15).attr("y", 60)
     .attr("fill", "white").style("font-size", "16px");
-
   detailsText1.append("tspan").attr("x", 15).text("The time it takes to reach");
   detailsText1.append("tspan").attr("x", 15).attr("dy", "1.4em").text("the maximum glucose level after meal");
 
-  annotationsGroup.selectAll(".hover-line-ge")
-    .on("mouseover", function() {
-      d3.select(this).attr("stroke-width", 4);
-      hoverTextGroup.style("display", null);
-    })
-    .on("mouseout", function() {
-      d3.select(this).attr("stroke-width", 2);
-      hoverTextGroup.style("display", "none");
-    })
-    .on("mousemove", function(event) {
-      const [mouseX, mouseY] = d3.pointer(event);
-      hoverTextGroup.attr("transform", `translate(${mouseX + 10},${mouseY - 10})`);
-    });
-
-  annotationsGroup.selectAll(".hover-line-ge")
-    .each(function() {
-      const lineEl = d3.select(this);
-      const x1 = lineEl.attr("x1");
-      const x2 = lineEl.attr("x2");
-      const y1 = lineEl.attr("y1");
-      const y2 = lineEl.attr("y2");
-
-      annotationsGroup.append("rect")
-        .attr("x", Math.min(x1, x2) - 10)
-        .attr("y", Math.min(y1, y2) - 10)
-        .attr("width", Math.abs(x2 - x1) + 20)
-        .attr("height", Math.abs(y2 - y1) + 20)
-        .attr("fill", "none")
-        .attr("pointer-events", "all")
-        .on("mouseover", function() { lineEl.dispatch("mouseover"); })
-        .on("mouseout", function() { lineEl.dispatch("mouseout"); })
-        .on("mousemove", function(event) { lineEl.dispatch("mousemove", { detail: event }); });
-    });
-
-  // Glucose recovery time lines
-  annotationsGroup.append("line")
-    .attr("x1", x(breakfast_glucose_excursion_time))
-    .attr("x2", x(breakfast_glucose_recovery_time))
-    .attr("y1", y(breakfast_start_glucose_value))
-    .attr("y2", y(breakfast_start_glucose_value))
-    .attr("stroke", "red").attr("stroke-width", 2).attr("class", "hover-line-gr");
-
-  annotationsGroup.append("line")
-    .attr("x1", x(lunch_glucose_excursion_time))
-    .attr("x2", x(lunch_glucose_recovery_time))
-    .attr("y1", y(lunch_start_glucose_value))
-    .attr("y2", y(lunch_start_glucose_value))
-    .attr("stroke", "red").attr("stroke-width", 2).attr("class", "hover-line-gr");
-
-  // Dots for recovery
-  annotationsGroup.append("circle").attr("cx", x(breakfast_glucose_excursion_time)).attr("cy", y(breakfast_start_glucose_value)).attr("r", 5).attr("fill", "red");
-  annotationsGroup.append("circle").attr("cx", x(breakfast_glucose_recovery_time)).attr("cy", y(breakfast_start_glucose_value)).attr("r", 5).attr("fill", "red");
-  annotationsGroup.append("circle").attr("cx", x(lunch_glucose_excursion_time)).attr("cy", y(lunch_start_glucose_value)).attr("r", 5).attr("fill", "red");
-  annotationsGroup.append("circle").attr("cx", x(lunch_glucose_recovery_time)).attr("cy", y(lunch_start_glucose_value)).attr("r", 5).attr("fill", "red");
-
-  // Hover text for recovery
-  const hoverTextGroupRecovery = annotationsGroup.append("g")
-    .style("display", "none")
-    .attr("transform", `translate(${margin.left + 20}, ${margin.top + 20})`);
-
-  hoverTextGroupRecovery.append("rect")
-    .attr("x", 0).attr("y", 0).attr("width", 300).attr("height", 120)
-    .attr("fill", "black").attr("opacity", 0.7).attr("rx", 10).attr("ry", 10);
-
-  const textContainer2 = hoverTextGroupRecovery.append("g").attr("class", "paragraph");
-
-  textContainer2.append("text")
-    .attr("class", "y-section-header").attr("x", 15).attr("y", 30)
-    .attr("fill", "white").style("font-size", "20px").text("Glucose Recovery");
-
-  const detailsText2 = textContainer2.append("text")
-    .attr("class", "details").attr("x", 15).attr("y", 60)
-    .attr("fill", "white").style("font-size", "16px");
-
-  detailsText2.append("tspan").attr("x", 15).text("The time it takes to return");
-  detailsText2.append("tspan").attr("x", 15).attr("dy", "1.4em").text("to original glucose level");
-
-  annotationsGroup.selectAll(".hover-line-gr")
-    .on("mouseover", function() {
-      d3.select(this).attr("stroke-width", 4);
-      hoverTextGroupRecovery.style("display", null);
-    })
-    .on("mouseout", function() {
-      d3.select(this).attr("stroke-width", 2);
-      hoverTextGroupRecovery.style("display", "none");
-    })
-    .on("mousemove", function(event) {
-      const [mouseX, mouseY] = d3.pointer(event);
-      hoverTextGroupRecovery.attr("transform", `translate(${mouseX + 10},${mouseY - 10})`);
-    });
-
-  annotationsGroup.selectAll(".hover-line-gr")
-    .each(function() {
-      const lineEl = d3.select(this);
-      const x1 = lineEl.attr("x1");
-      const x2 = lineEl.attr("x2");
-      const y1 = lineEl.attr("y1");
-      const y2 = lineEl.attr("y2");
-
-      annotationsGroup.append("rect")
-        .attr("x", Math.min(x1, x2) - 10)
-        .attr("y", Math.min(y1, y2) - 10)
-        .attr("width", Math.abs(x2 - x1) + 20)
-        .attr("height", Math.abs(y2 - y1) + 20)
-        .attr("fill", "none")
-        .attr("pointer-events", "all")
-        .on("mouseover", function() { lineEl.dispatch("mouseover"); })
-        .on("mouseout", function() { lineEl.dispatch("mouseout"); })
-        .on("mousemove", function(event) { lineEl.dispatch("mousemove", { detail: event }); });
-    });
-
-  // Glucose excursion (vertical) lines
-  annotationsGroup.append("line")
-    .attr("x1", x(breakfast_glucose_excursion_time))
-    .attr("x2", x(breakfast_glucose_excursion_time))
-    .attr("y1", y(breakfast_start_glucose_value))
-    .attr("y2", y(breakfast_glucose_excursion_value))
-    .attr("stroke", "red").attr("stroke-width", 2).attr("class", "hover-line-ex");
-
-  annotationsGroup.append("line")
-    .attr("x1", x(lunch_glucose_excursion_time))
-    .attr("x2", x(lunch_glucose_excursion_time))
-    .attr("y1", y(lunch_start_glucose_value))
-    .attr("y2", y(lunch_glucose_excursion_value))
-    .attr("stroke", "red").attr("stroke-width", 2).attr("class", "hover-line-ex");
-
-  // Dots for excursion
-  annotationsGroup.append("circle").attr("cx", x(breakfast_glucose_excursion_time)).attr("cy", y(breakfast_glucose_excursion_value)).attr("r", 5).attr("fill", "red");
-  annotationsGroup.append("circle").attr("cx", x(lunch_glucose_excursion_time)).attr("cy", y(lunch_glucose_excursion_value)).attr("r", 5).attr("fill", "red");
-
-  // Hover text for excursion
-  const hoverTextGroupExcursion = annotationsGroup.append("g")
-    .style("display", "none")
-    .attr("transform", `translate(${margin.left + 20}, ${margin.top + 20})`);
+  // Tooltip for excursion (vertical)
+  const hoverTextGroupExcursion = hoverGroup.append("g")
+    .style("display", "none");
 
   hoverTextGroupExcursion.append("rect")
     .attr("x", 0).attr("y", 0).attr("width", 300).attr("height", 120)
     .attr("fill", "black").attr("opacity", 0.7).attr("rx", 10).attr("ry", 10);
 
   const textContainer = hoverTextGroupExcursion.append("g").attr("class", "paragraph");
-
   textContainer.append("text")
     .attr("class", "y-section-header").attr("x", 15).attr("y", 30)
     .attr("fill", "white").style("font-size", "20px").text("Glucose Excursion");
-
   const detailsText = textContainer.append("text")
     .attr("class", "details").attr("x", 15).attr("y", 60)
     .attr("fill", "white").style("font-size", "16px");
-
   detailsText.append("tspan").attr("x", 15).text("The maximum glucose level");
   detailsText.append("tspan").attr("x", 15).attr("dy", "1.4em").text("reached after having a meal");
 
-  annotationsGroup.selectAll(".hover-line-ex")
-    .on("mouseover", function() {
-      d3.select(this).attr("stroke-width", 4);
-      hoverTextGroupExcursion.style("display", null);
-    })
-    .on("mouseout", function() {
-      d3.select(this).attr("stroke-width", 2);
-      hoverTextGroupExcursion.style("display", "none");
-    });
+  // Tooltip for recovery
+  const hoverTextGroupRecovery = hoverGroup.append("g")
+    .style("display", "none");
+
+  hoverTextGroupRecovery.append("rect")
+    .attr("x", 0).attr("y", 0).attr("width", 300).attr("height", 120)
+    .attr("fill", "black").attr("opacity", 0.7).attr("rx", 10).attr("ry", 10);
+
+  const textContainer2 = hoverTextGroupRecovery.append("g").attr("class", "paragraph");
+  textContainer2.append("text")
+    .attr("class", "y-section-header").attr("x", 15).attr("y", 30)
+    .attr("fill", "white").style("font-size", "20px").text("Glucose Recovery");
+  const detailsText2 = textContainer2.append("text")
+    .attr("class", "details").attr("x", 15).attr("y", 60)
+    .attr("fill", "white").style("font-size", "16px");
+  detailsText2.append("tspan").attr("x", 15).text("The time it takes to return");
+  detailsText2.append("tspan").attr("x", 15).attr("dy", "1.4em").text("to original glucose level");
+
+  // Hit-area rects for each line type
+  function addHitRect(lineEl, tooltipGroup) {
+    const lx1 = +lineEl.attr("x1"), ly1 = +lineEl.attr("y1");
+    const lx2 = +lineEl.attr("x2"), ly2 = +lineEl.attr("y2");
+    hoverGroup.append("rect")
+      .attr("x", Math.min(lx1, lx2) - 10)
+      .attr("y", Math.min(ly1, ly2) - 10)
+      .attr("width", Math.abs(lx2 - lx1) + 20)
+      .attr("height", Math.abs(ly2 - ly1) + 20)
+      .attr("fill", "none")
+      .attr("pointer-events", "all")
+      .on("mouseover", function() {
+        lineEl.attr("stroke-width", 4);
+        tooltipGroup.style("display", null);
+      })
+      .on("mouseout", function() {
+        lineEl.attr("stroke-width", 2);
+        tooltipGroup.style("display", "none");
+      })
+      .on("mousemove", function(event) {
+        const [mouseX, mouseY] = d3.pointer(event);
+        tooltipGroup.attr("transform", `translate(${mouseX + 10},${mouseY - 10})`);
+      });
+  }
+
+  addHitRect(bfExcTimeLine, hoverTextGroup);
+  addHitRect(luExcTimeLine, hoverTextGroup);
+  addHitRect(bfExcLine, hoverTextGroupExcursion);
+  addHitRect(luExcLine, hoverTextGroupExcursion);
+  addHitRect(bfRecLine, hoverTextGroupRecovery);
+  addHitRect(luRecLine, hoverTextGroupRecovery);
 
   // --- Scroll-driven animation via GSAP ScrollTrigger ---
-  setupScrollAnimation(path, totalLength, trackingDot, annotationsGroup);
+  setupScrollAnimation({
+    path, totalLength, trackingDot, mealLinesGroup, dots,
+    excTimeLines: [bfExcTimeLine, luExcTimeLine],
+    excLines: [bfExcLine, luExcLine],
+    recLines: [bfRecLine, luRecLine],
+    hoverGroup, narrationGroup, narrationText,
+  });
 }
 
-function setupScrollAnimation(path, totalLength, trackingDot, annotationsGroup) {
+function setupScrollAnimation({ path, totalLength, trackingDot, mealLinesGroup, dots, excTimeLines, excLines, recLines, hoverGroup, narrationGroup, narrationText }) {
   const pathNode = path.node();
   const dotNode = trackingDot.node();
-  const annotationsNode = annotationsGroup.node();
+  const mealLinesNode = mealLinesGroup.node();
+  const narrationNode = narrationGroup.node();
+  const narrationTextNode = narrationText.node();
 
-  console.log('[metrics-explain] Setting up ScrollTrigger, totalLength:', totalLength);
+  console.log('[metrics-explain] setupScrollAnimation called with:', {
+    totalLength,
+    dotsCount: dots.length,
+    excTimeLinesCount: excTimeLines.length,
+    excLinesCount: excLines.length,
+    recLinesCount: recLines.length,
+    pathNode: pathNode?.tagName,
+    mealLinesNode: mealLinesNode?.tagName,
+    narrationNode: narrationNode?.tagName,
+  });
 
-  // Build a GSAP timeline pinned to the section, scrub-driven by scroll
   const tl = gsap.timeline({
     scrollTrigger: {
       trigger: "#glu_metrics_explain",
       start: "top top",
-      end: "+=200%",
+      end: "+=400%",
       scrub: true,
       pin: true,
       pinSpacing: true,
-      markers: true,
-      onEnter: () => console.log('[metrics-explain] ST onEnter'),
-      onLeave: () => console.log('[metrics-explain] ST onLeave'),
-      onUpdate: (self) => console.log('[metrics-explain] ST progress:', self.progress.toFixed(3)),
-      onRefresh: (self) => console.log('[metrics-explain] ST onRefresh, start:', self.start, 'end:', self.end),
+      onUpdate: (self) => {
+        if (Math.round(self.progress * 100) % 10 === 0) {
+          console.log('[metrics-explain] scroll progress:', (self.progress * 100).toFixed(0) + '%');
+        }
+      },
     }
   });
 
-  // Phase 1: Draw the line and move the tracking dot
+  console.log('[metrics-explain] Timeline created, total duration will build up as tweens added');
+
+  // Phase 1: Draw the glucose line and move the tracking dot
   tl.fromTo(pathNode,
     { attr: { "stroke-dashoffset": totalLength } },
     {
@@ -526,7 +537,7 @@ function setupScrollAnimation(path, totalLength, trackingDot, annotationsGroup) 
       duration: 2,
       ease: "none",
       onStart: () => {
-        console.log('[metrics-explain] line draw started');
+        console.log('[metrics-explain] Phase 1: line draw START');
         gsap.set(dotNode, { opacity: 1 });
       },
       onUpdate: function() {
@@ -539,35 +550,92 @@ function setupScrollAnimation(path, totalLength, trackingDot, annotationsGroup) 
   );
 
   // Phase 2: Fade out the tracking dot
-  tl.to(dotNode, { opacity: 0, duration: 0.2 });
+  tl.to(dotNode, { opacity: 0, duration: 0.2, onStart: () => console.log('[metrics-explain] Phase 2: fade dot') });
 
-  // Phase 3: Fade in the annotations
-  tl.to(annotationsNode, { opacity: 1, duration: 0.5 });
+  // Phase 3: Fade in meal dashed lines + show narration
+  tl.to(narrationNode, { opacity: 1, duration: 0.1 });
+  tl.add(() => {
+    console.log('[metrics-explain] Phase 3: meal lines. mealLinesNode children:', mealLinesNode?.childNodes?.length, 'current opacity:', mealLinesNode?.style?.opacity);
+    narrationTextNode.textContent = "Breakfast and lunch times are marked";
+  });
+  tl.to(mealLinesNode, { opacity: 1, duration: 0.4 });
 
-  // Phase 4: Hold so annotations are visible while pinned
+  // Phase 4: Pop in the 3 key dots per meal (r: 0 → 5)
+  tl.add(() => {
+    console.log('[metrics-explain] Phase 4: dots. count:', dots.length);
+    dots.forEach((d, i) => {
+      const node = d.node();
+      console.log(`  dot[${i}]: cx=${node.getAttribute('cx')} cy=${node.getAttribute('cy')} r=${node.getAttribute('r')} parent=${node.parentNode?.tagName}.${node.parentNode?.getAttribute?.('class') || ''}`);
+    });
+    narrationTextNode.textContent = "Key glucose points are identified";
+  });
+  if (dots.length > 0) {
+    tl.to(dots.map(d => d.node()), { attr: { r: 5 }, duration: 0.3, stagger: 0.05,
+      onStart: () => console.log('[metrics-explain] Phase 4: dot tween START'),
+      onComplete: () => {
+        console.log('[metrics-explain] Phase 4: dot tween COMPLETE');
+        dots.forEach((d, i) => console.log(`  dot[${i}] r after:`, d.node().getAttribute('r')));
+      }
+    });
+  }
+
+  // Phase 5: Draw excursion time horizontal lines
+  tl.add(() => {
+    console.log('[metrics-explain] Phase 5: excursion time lines. count:', excTimeLines.length);
+    excTimeLines.forEach((l, i) => {
+      const n = l.node();
+      console.log(`  excTimeLine[${i}]: dashoffset=${n.getAttribute('stroke-dashoffset')} dasharray=${n.getAttribute('stroke-dasharray')} parent=${n.parentNode?.tagName}`);
+    });
+    narrationTextNode.textContent = "Glucose excursion time — time to reach peak";
+  });
+  if (excTimeLines.length > 0) {
+    tl.to(excTimeLines.map(l => l.node()), { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "none",
+      onStart: () => console.log('[metrics-explain] Phase 5: line draw tween START'),
+      onComplete: () => console.log('[metrics-explain] Phase 5: line draw tween COMPLETE'),
+    });
+  }
+
+  // Phase 6: Draw excursion vertical lines
+  tl.add(() => {
+    console.log('[metrics-explain] Phase 6: excursion vertical lines. count:', excLines.length);
+    narrationTextNode.textContent = "Glucose excursion — maximum glucose level reached";
+  });
+  if (excLines.length > 0) {
+    tl.to(excLines.map(l => l.node()), { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "none",
+      onStart: () => console.log('[metrics-explain] Phase 6: line draw tween START'),
+    });
+  }
+
+  // Phase 7: Draw recovery horizontal lines
+  tl.add(() => {
+    console.log('[metrics-explain] Phase 7: recovery lines. count:', recLines.length);
+    narrationTextNode.textContent = "Glucose recovery — time to return to baseline";
+  });
+  if (recLines.length > 0) {
+    tl.to(recLines.map(l => l.node()), { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "none",
+      onStart: () => console.log('[metrics-explain] Phase 7: line draw tween START'),
+    });
+  }
+
+  // Phase 8: Enable hover tooltips + hold
+  tl.add(() => {
+    console.log('[metrics-explain] Phase 8: enable hover + hold');
+    hoverGroup.style("pointer-events", "all");
+  });
   tl.to({}, { duration: 1 });
+
+  console.log('[metrics-explain] Timeline total duration:', tl.duration());
 
   // Refresh ScrollTrigger since this runs after async data load
   requestAnimationFrame(() => {
     ScrollTrigger.refresh();
-    console.log('[metrics-explain] ScrollTrigger.refresh() called');
-    console.log('[metrics-explain] All ScrollTriggers:', ScrollTrigger.getAll().map((st, i) => ({
-      index: i,
-      trigger: st.trigger?.id || st.trigger?.tagName,
-      start: st.start,
-      end: st.end,
-      pin: !!st.pin,
-    })));
   });
 }
 
 async function main() {
   try {
-    console.log('[metrics-explain] main() called, fetching data...');
     const { nonDiabeticParticipants, cgmData, mealData } = await fetchData();
-    console.log('[metrics-explain] data loaded, participants:', nonDiabeticParticipants.length, 'cgm rows:', cgmData.length);
     plotData(nonDiabeticParticipants, cgmData, mealData);
-    console.log('[metrics-explain] plotData() completed');
   } catch (error) {
     console.error('[metrics-explain] Error in main function:', error);
   }
