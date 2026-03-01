@@ -36,58 +36,60 @@ async function loadData() {
   }
 }
 
-function createGlucoseLineChart(container, data, groupColor, yScale, pid, isFirst, isBottomRow) {
+function createGlucoseLineChart(container, data, groupColor, yScale, pid) {
   function formatTime(index) {
     const totalMinutes = index * minutesPerReading;
     const day = Math.floor(totalMinutes / 1440);
     return `Day ${day}`;
   }
 
-  function getTickCount(width) {
-    if (width < 100) return 3;
-    if (width < 200) return 4;
-    if (width < 300) return 5;
+  function getTickCount(w) {
+    if (w < 100) return 3;
+    if (w < 200) return 4;
+    if (w < 300) return 5;
     return 5;
   }
 
   function updateChart() {
-    width = container.node().getBoundingClientRect().width - chartMargin.left - chartMargin.right;
-    width = Math.max(width, 150);
+    const rect = container.node().getBoundingClientRect();
+    innerWidth = Math.max(rect.width - chartMargin.left - chartMargin.right, 50);
+    innerHeight = Math.max(rect.height - chartMargin.top - chartMargin.bottom, 50);
 
-    clipPath.attr("width", width);
+    svgNode.attr("width", rect.width).attr("height", rect.height);
 
-    xScale.range([0, width])
+    clipPath.attr("width", innerWidth).attr("height", innerHeight);
+
+    xScale.range([0, innerWidth])
         .domain([startTime, startTime + windowSize]);
 
-    const tickCount = getTickCount(width);
+    localYScale.range([innerHeight, 0]);
 
-    if (isBottomRow) {
-      xAxisGroup.call(d3.axisBottom(xScale)
+    const tickCount = getTickCount(innerWidth);
+
+    xAxisGroup
+        .attr("transform", `translate(0, ${innerHeight})`)
+        .call(d3.axisBottom(xScale)
           .ticks(tickCount)
           .tickFormat(d => formatTime(d)));
 
-      xAxisGroup.selectAll("text")
-          .attr("dy", "1em")
-          .attr("transform", "rotate(-25)")
-          .style("text-anchor", "end");
-    } else {
-      xAxisGroup.call(d3.axisBottom(xScale).ticks(0).tickSize(0));
-      xAxisGroup.selectAll("text").remove();
-    }
+    xAxisGroup.selectAll("text")
+        .attr("dy", "1em")
+        .attr("transform", "rotate(-25)")
+        .style("text-anchor", "end")
+        .style("font-size", "8px");
 
-    if (isFirst) {
-      yAxisGroup.call(d3.axisLeft(yScale).ticks(5));
-    }
+    yAxisGroup.call(d3.axisLeft(localYScale).ticks(5));
+    yAxisGroup.selectAll("text").style("font-size", "8px");
 
     yGrid.selectAll("line").remove();
     yGrid.selectAll("line")
-        .data(yScale.ticks(5))
+        .data(localYScale.ticks(5))
         .enter()
         .append("line")
         .attr("x1", 0)
-        .attr("x2", width)
-        .attr("y1", d => yScale(d))
-        .attr("y2", d => yScale(d))
+        .attr("x2", innerWidth)
+        .attr("y1", d => localYScale(d))
+        .attr("y2", d => localYScale(d))
         .attr("stroke", "#ccc")
         .attr("stroke-dasharray", "2,2");
 
@@ -99,7 +101,7 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid, isFirs
     const midIndex = Math.floor(windowSize / 2);
     if (midIndex < visibleData.length) {
       dot.attr("cx", xScale(startTime + midIndex))
-          .attr("cy", yScale(visibleData[midIndex].glucose));
+          .attr("cy", localYScale(visibleData[midIndex].glucose));
     }
   }
 
@@ -113,7 +115,7 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid, isFirs
         .attr("x1", d => xScale(d))
         .attr("x2", d => xScale(d))
         .attr("y1", 0)
-        .attr("y2", height)
+        .attr("y2", innerHeight)
         .attr("stroke", "#ccc")
         .attr("stroke-dasharray", "2,2");
   }
@@ -128,18 +130,17 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid, isFirs
 
     xScale.domain([startTime, startTime + windowSize]);
 
-    const tickCount = getTickCount(width);
+    const tickCount = getTickCount(innerWidth);
 
-    if (isBottomRow) {
-      xAxisGroup.call(d3.axisBottom(xScale)
-          .ticks(tickCount)
-          .tickFormat(d => formatTime(d)));
+    xAxisGroup.call(d3.axisBottom(xScale)
+        .ticks(tickCount)
+        .tickFormat(d => formatTime(d)));
 
-      xAxisGroup.selectAll("text")
-          .attr("dy", "1em")
-          .attr("transform", "rotate(-25)")
-          .style("text-anchor", "end");
-    }
+    xAxisGroup.selectAll("text")
+        .attr("dy", "1em")
+        .attr("transform", "rotate(-25)")
+        .style("text-anchor", "end")
+        .style("font-size", "8px");
 
     updateXGrid(tickCount);
 
@@ -149,44 +150,46 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid, isFirs
     const midIndex = Math.floor(windowSize / 2);
     if (midIndex < visibleData.length) {
       dot.attr("cx", xScale(startTime + midIndex))
-          .attr("cy", yScale(visibleData[midIndex].glucose));
+          .attr("cy", localYScale(visibleData[midIndex].glucose));
     }
 
     setTimeout(animate, 20);
   }
 
-  const chartMargin = { top: -5, right: 10, bottom: isBottomRow ? 40 : 10, left: isFirst ? 50 : 10 };
-  const svgEl = container.append("svg")
+  const chartMargin = { top: 5, right: 10, bottom: 35, left: 40 };
+
+  const initRect = container.node().getBoundingClientRect();
+  const svgNode = container.append("svg")
       .attr('class', 'rolling_glucose_svg')
-      .attr("width", `100%`)
-      .attr("height", `80%`)
-      .append("g")
+      .attr("width", initRect.width)
+      .attr("height", initRect.height);
+
+  const svgEl = svgNode.append("g")
       .attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
 
-  let width = container.node().getBoundingClientRect().width - chartMargin.left - chartMargin.right;
-  let height = container.node().getBoundingClientRect().height - chartMargin.top - chartMargin.bottom;
-  width = Math.max(width, 150);
-  height = Math.max(height, 100);
+  let innerWidth = Math.max(initRect.width - chartMargin.left - chartMargin.right, 50);
+  let innerHeight = Math.max(initRect.height - chartMargin.top - chartMargin.bottom, 50);
 
+  const clipId = `clip-${pid}`;
   const clipPath = svgEl.append("defs").append("clipPath")
+      .attr("id", clipId)
       .append("rect")
-      .attr("width", width)
-      .attr("height", height);
+      .attr("width", innerWidth)
+      .attr("height", innerHeight);
 
   const chartGroup = svgEl.append("g")
-      .attr('width', width)
-      .attr('height', height);
+      .attr("clip-path", `url(#${clipId})`);
 
   let startTime = 0;
   const windowSize = 100;
   const minutesPerReading = 15;
 
   const xScale = d3.scaleLinear()
-      .range([10, width-10]);
+      .range([0, innerWidth]);
 
-  yScale = d3.scaleLinear()
-      .domain([50, 350])
-      .range([height * 0.8, 10]);
+  const localYScale = d3.scaleLinear()
+      .domain(yScale.domain())
+      .range([innerHeight, 0]);
 
   const yGrid = svgEl.append("g")
       .attr("class", "y-grid");
@@ -196,7 +199,7 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid, isFirs
 
   const line = d3.line()
       .x((d, i) => xScale(startTime + i))
-      .y(d => yScale(d.glucose));
+      .y(d => localYScale(d.glucose));
 
   const path = chartGroup.append("path")
       .attr("class", "glucose-line")
@@ -210,23 +213,10 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid, isFirs
 
   const xAxisGroup = svgEl.append("g")
       .attr("class", "x-axis")
-      .attr("transform", `translate(0, ${height * 0.8})`);
+      .attr("transform", `translate(0, ${innerHeight})`);
 
   const yAxisGroup = svgEl.append("g")
       .attr("class", "y-axis");
-
-  if (isFirst) {
-    svgEl.append("text")
-        .attr("class", "y-axis-label")
-        .attr("transform", "rotate(-90)")
-        .attr("x", -height / 2)
-        .attr("y", -chartMargin.left + 15)
-        .attr("text-anchor", "middle")
-        .style("font-family", "Arial, sans-serif")
-        .style("font-size", "12px")
-        .style("fill", "gray")
-        .text("Glucose (mg/dL)");
-  }
 
   let animationRunning = false;
 
@@ -286,15 +276,13 @@ async function loadDataAndCreateCharts() {
   });
 
   const globalYScale = d3.scaleLinear()
-      .domain([globalMin, globalMax])
+      .domain([Math.floor(globalMin / 10) * 10, Math.ceil(globalMax / 10) * 10])
       .range([100 - 5, 5]);
 
   const groupEntries = Object.entries(groups);
   groupEntries.forEach(([group, participants], groupIdx) => {
     const groupContainer = d3.select(`#${group.replace(" ", "-").toLowerCase()}-vis`)
         .style('position', 'relative');
-    const isBottomRow = groupIdx === groupEntries.length - 1;
-
     Object.entries(participants).forEach(([pid, entries], idx) => {
       const participantDiv = groupContainer.append("div")
           .attr("class", "participant-section")
@@ -314,8 +302,7 @@ async function loadDataAndCreateCharts() {
           .text(`Participant ${pid}`);
 
       const color = getColorForGroup(group);
-      const isFirst = idx === 0;
-      const chart = createGlucoseLineChart(participantDiv, entries, color, globalYScale, pid, isFirst, isBottomRow);
+      const chart = createGlucoseLineChart(participantDiv, entries, color, globalYScale, pid);
       charts.push(chart);
     });
   });

@@ -71,7 +71,7 @@
   }
 
   #rollig_glu_dot .line-category {
-    height: 20vh;
+    height: 22vh;
   }
 
   .roll-title {
@@ -187,7 +187,7 @@
   }
 
   #rollig_glu_dot .line-category {
-    height: 150px;
+    height: 180px;
     flex-direction: row;
     flex-wrap: wrap;
     padding: 10px;
