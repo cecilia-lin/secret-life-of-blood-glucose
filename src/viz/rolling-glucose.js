@@ -44,18 +44,16 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid) {
   }
 
   function getTickCount(w) {
-    if (w < 100) return 3;
-    if (w < 200) return 4;
-    if (w < 300) return 5;
-    return 5;
+    if (w < 100) return 2;
+    if (w < 200) return 3;
+    if (w < 300) return 4;
+    return 4;
   }
 
   function updateChart() {
-    const rect = container.node().getBoundingClientRect();
+    const rect = svgNode.node().getBoundingClientRect();
     innerWidth = Math.max(rect.width - chartMargin.left - chartMargin.right, 50);
     innerHeight = Math.max(rect.height - chartMargin.top - chartMargin.bottom, 50);
-
-    svgNode.attr("width", rect.width).attr("height", rect.height);
 
     clipPath.attr("width", innerWidth).attr("height", innerHeight);
 
@@ -73,13 +71,14 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid) {
           .tickFormat(d => formatTime(d)));
 
     xAxisGroup.selectAll("text")
-        .attr("dy", "1em")
-        .attr("transform", "rotate(-25)")
-        .style("text-anchor", "end")
-        .style("font-size", "8px");
+        .attr("dy", "0.7em")
+        .style("text-anchor", "middle")
+        .style("font-size", "7px");
 
     yAxisGroup.call(d3.axisLeft(localYScale).ticks(5));
     yAxisGroup.selectAll("text").style("font-size", "8px");
+
+    yLabel.attr("x", -innerHeight / 2);
 
     yGrid.selectAll("line").remove();
     yGrid.selectAll("line")
@@ -137,10 +136,9 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid) {
         .tickFormat(d => formatTime(d)));
 
     xAxisGroup.selectAll("text")
-        .attr("dy", "1em")
-        .attr("transform", "rotate(-25)")
-        .style("text-anchor", "end")
-        .style("font-size", "8px");
+        .attr("dy", "0.7em")
+        .style("text-anchor", "middle")
+        .style("font-size", "7px");
 
     updateXGrid(tickCount);
 
@@ -156,19 +154,18 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid) {
     setTimeout(animate, 20);
   }
 
-  const chartMargin = { top: 5, right: 10, bottom: 35, left: 40 };
+  const chartMargin = { top: 10, right: 5, bottom: 35, left: 40 };
 
-  const initRect = container.node().getBoundingClientRect();
   const svgNode = container.append("svg")
       .attr('class', 'rolling_glucose_svg')
-      .attr("width", initRect.width)
-      .attr("height", initRect.height);
+      .style("width", "100%")
+      .style("flex", "1");
 
   const svgEl = svgNode.append("g")
       .attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
 
-  let innerWidth = Math.max(initRect.width - chartMargin.left - chartMargin.right, 50);
-  let innerHeight = Math.max(initRect.height - chartMargin.top - chartMargin.bottom, 50);
+  let innerWidth = 50;
+  let innerHeight = 50;
 
   const clipId = `clip-${pid}`;
   const clipPath = svgEl.append("defs").append("clipPath")
@@ -217,6 +214,17 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid) {
 
   const yAxisGroup = svgEl.append("g")
       .attr("class", "y-axis");
+
+  // Y-axis label
+  const yLabel = svgEl.append("text")
+      .attr("class", "y-axis-label")
+      .attr("text-anchor", "middle")
+      .attr("transform", `rotate(-90)`)
+      .attr("x", -innerHeight / 2)
+      .attr("y", -chartMargin.left + 12)
+      .style("font-size", "10px")
+      .style("fill", "#666")
+      .text("Glucose (mg/dL)");
 
   let animationRunning = false;
 

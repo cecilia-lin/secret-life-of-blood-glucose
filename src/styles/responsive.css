@@ -75,7 +75,7 @@
   }
 
   .roll-title {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 
   /* Plate/mat scaling */
@@ -187,7 +187,7 @@
   }
 
   #rollig_glu_dot .line-category {
-    height: 180px;
+    height: 200px;
     flex-direction: row;
     flex-wrap: wrap;
     padding: 10px;

@@ -63,7 +63,7 @@
   align-items: center;
   width: 100%;
   margin: 0;
-  gap: 4px;
+  gap: 2px;
 }
 
 #rollig_glu_dot .line-category {
@@ -71,19 +71,20 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding: 10px;
+  padding: 5px;
   box-shadow: 0 3px 4px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   width: 100%;
-  height: 28vh;
+  height: 25vh;
 }
 
 .roll-title {
-  margin-top: 2px;
+  margin-top: 0;
   margin-bottom: 0;
   font-family: "Red Hat Text", sans-serif;
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: gray;
+  line-height: 1.2;
 }
 
 /* Border around each participant chart */
