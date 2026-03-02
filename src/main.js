@@ -21,20 +21,23 @@ import { init as initRollingGlucose } from './viz/rolling-glucose.js';
 import { init as initMeals } from './viz/meals.js';
 import { init as initMetricsExplain } from './viz/metrics-explain.js';
 import { init as initQuiz } from './viz/quiz.js';
-import { init as initScrollAnimations } from './animations/scrolling-animation.js';
+import { init as initScrollAnimations, initPanel2 } from './animations/scrolling-animation.js';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initScrollAnimations();
   initGlobalChart();
   initDistribution();
   initRollingGlucose();
   initMeals();
-  initMetricsExplain();
   initQuiz();
 
-  // Refresh ScrollTrigger after all modules have initialized and altered the DOM
-  requestAnimationFrame(() => {
-    ScrollTrigger.refresh();
-  });
+  // Wait for metrics-explain to finish its async data fetch + ScrollTrigger creation.
+  // Panel-2's ScrollTrigger must be created AFTER this, otherwise its start position
+  // is calculated without the metrics-explain pin-spacer (+=400%) and lands mid-animation.
+  await initMetricsExplain();
+
+  // Now that all pin-spacers exist, create panel-2's trigger and refresh positions
+  initPanel2();
+  ScrollTrigger.refresh();
 });

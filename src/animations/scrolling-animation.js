@@ -347,3 +347,68 @@ export function init() {
 
   console.log('[scroll-anim] init() complete');
 }
+
+// Separate export — must be called AFTER async modules (metrics-explain)
+// have created their ScrollTriggers + pin-spacers.
+export function initPanel2() {
+  const panel2 = document.getElementById("panel-2");
+  const panel2Overlay = document.getElementById("panel2-overlay");
+  const panel2CloseBtn = panel2Overlay.querySelector(".panel2-notification-close");
+
+  // Once dismissed, the overlay never reappears until a full page refresh
+  let dismissed = false;
+
+  panel2CloseBtn.addEventListener("click", () => {
+    panel2Overlay.classList.add("hidden");
+    dismissed = true;
+  });
+
+  console.log('[scroll-anim] panel-2 before ST:', {
+    offsetTop: panel2.offsetTop,
+    offsetHeight: panel2.offsetHeight,
+    overflow: getComputedStyle(panel2).overflow,
+    position: getComputedStyle(panel2).position,
+    height: getComputedStyle(panel2).height,
+    rect: panel2.getBoundingClientRect(),
+  });
+
+  const panel2Trigger = ScrollTrigger.create({
+    trigger: panel2,
+    start: "top top",
+    end: "+=100%",
+    pin: true,
+    pinSpacing: true,
+    markers: true,   // TEMPORARY: visible start/end markers
+    onEnter: () => console.log('[scroll-anim] panel-2 ST: onEnter'),
+    onLeave: () => console.log('[scroll-anim] panel-2 ST: onLeave'),
+    onEnterBack: () => console.log('[scroll-anim] panel-2 ST: onEnterBack'),
+    onLeaveBack: () => console.log('[scroll-anim] panel-2 ST: onLeaveBack'),
+    onUpdate: (self) => {
+      console.log('[scroll-anim] panel-2 ST progress:', {
+        progress: self.progress.toFixed(3),
+        direction: self.direction,
+        isActive: self.isActive,
+        pin: self.pin,
+      });
+      if (!dismissed && self.progress > 0.3 && panel2Overlay.classList.contains("hidden")) {
+        panel2Overlay.classList.remove("hidden");
+      }
+    },
+    onRefresh: (self) => {
+      console.log('[scroll-anim] panel-2 ST onRefresh:', {
+        start: self.start,
+        end: self.end,
+        pin: self.pin,
+        spacer: self.spacer ? self.spacer.offsetHeight : 'no spacer',
+        triggerHeight: panel2.offsetHeight,
+      });
+    }
+  });
+
+  console.log('[scroll-anim] panel-2 ST created:', {
+    start: panel2Trigger.start,
+    end: panel2Trigger.end,
+    pin: panel2Trigger.pin,
+    isActive: panel2Trigger.isActive,
+  });
+}

@@ -1,8 +1,75 @@
 /* Panel 2 Styles */
 #panel-2 {
+  position: relative;
   height: 100vh;
-  overflow: hidden;
-  margin: auto;
+  width: 100%;
+  margin: 0;
+  overflow: visible;
+}
+
+/* Panel-2 notification overlay */
+.panel2-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  pointer-events: none;          /* let scroll events pass through */
+  transition: opacity 0.4s ease;
+}
+
+.panel2-overlay.hidden {
+  opacity: 0;
+}
+
+.panel2-notification {
+  position: relative;
+  width: 420px;
+  max-width: 90%;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 16px;
+  padding: 32px 28px 28px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  pointer-events: auto;          /* only the box itself captures clicks */
+}
+
+.panel2-notification p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #1d1d1f;
+  margin: 0 0 12px;
+}
+
+.panel2-notification p:last-of-type {
+  margin-bottom: 0;
+}
+
+.panel2-notification-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #e8e8e8;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #333;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.panel2-notification-close:hover {
+  background: #d0d0d0;
+  color: #1d1d1f;
 }
 
 #panel-2 h3 {
@@ -27,6 +94,7 @@
   height: 100%;
   gap: 10px;
   overflow: hidden;
+  padding-top: 70px;  /* clear the fixed navbar (60px) + breathing room */
 }
 
 .title-container {

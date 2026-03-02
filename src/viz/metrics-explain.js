@@ -544,5 +544,5 @@ async function main() {
 }
 
 export function init() {
-  main();
+  return main();
 }
