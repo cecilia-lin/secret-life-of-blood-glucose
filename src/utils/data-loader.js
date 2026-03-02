@@ -25,7 +25,3 @@ export function loadMealData() {
 export function loadSampledBio() {
   return cachedJson('sampled_bio', 'vis_data/sampled_bio.json');
 }
-
-export function loadMetrics() {
-  return cachedJson('metrics', 'vis_data/metrics.json');
-}

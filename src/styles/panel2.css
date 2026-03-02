@@ -194,15 +194,6 @@
   overflow-y: hidden;
 }
 
-.visualization-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
 .control-panel-wrapper {
   width: 300px;
   flex-shrink: 0;
@@ -265,33 +256,6 @@
   color: white;
 }
 
-.time-preset {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.time-btn {
-  margin: 5px;
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-  font-size: 14px;
-  color: #1d1d1f;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  text-align: center;
-}
-
-.time-btn.active {
-  background: #28a745;
-  color: white;
-  border-color: #1e7e34;
-}
-
 .line {
   fill: none;
   stroke-width: 2;
@@ -327,10 +291,6 @@
   margin-bottom: 16px;
   color: var(--color-blue);
   font-family: "DM Serif Text", serif;
-}
-
-.time-custom {
-  padding: 0 8px;
 }
 
 input[type="range"] {

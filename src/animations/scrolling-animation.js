@@ -6,21 +6,11 @@ import { Observer } from 'gsap/Observer';
 gsap.registerPlugin(ScrollToPlugin, Observer, ScrollTrigger);
 
 export function init() {
-  console.log('[scroll-anim] init() called');
-
   let $path = document.querySelector(".mat"),
       $plate = document.querySelector(".plate"),
       $fork = document.querySelector(".fork"),
       $knife = document.querySelector(".knife"),
       introSection = document.querySelector("#intro");
-
-  console.log('[scroll-anim] DOM elements:', {
-    mat: !!$path,
-    plate: !!$plate,
-    fork: !!$fork,
-    knife: !!$knife,
-    intro: !!introSection,
-  });
 
   function playAnimation() {
     let tl = gsap.timeline({ repeat: 0, repeatDelay: 0 });
@@ -38,11 +28,12 @@ export function init() {
     tl.play();
   }
 
-  gsap.to('progress', {
-    value: 100,
-    ease: 'none',
-    scrollTrigger: { scrub: 0.3 }
-  });
+  const progressBar = document.querySelector('progress');
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.value = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+  }, { passive: true });
 
   window.onload = playAnimation;
 
@@ -60,23 +51,6 @@ export function init() {
   mark = title.querySelector("span"),
   dot = document.querySelector(".dot");
 
-  console.log('[scroll-anim] #question elements:', {
-    question: !!q,
-    title: !!title,
-    mark: !!mark,
-    dot: !!dot,
-  });
-  console.log('[scroll-anim] #question computed styles:', {
-    overflow: getComputedStyle(q).overflow,
-    overflowX: getComputedStyle(q).overflowX,
-    overflowY: getComputedStyle(q).overflowY,
-    position: getComputedStyle(q).position,
-    height: getComputedStyle(q).height,
-    minHeight: getComputedStyle(q).minHeight,
-  });
-  console.log('[scroll-anim] #question rect:', q.getBoundingClientRect());
-  console.log('[scroll-anim] mark rect:', mark.getBoundingClientRect());
-
   gsap.set(dot, {
     width: "140vmax",
     height: "140vmax",
@@ -84,12 +58,6 @@ export function init() {
     yPercent: -50,
     top: "50%",
     left: "50%"
-  });
-
-  console.log('[scroll-anim] dot after gsap.set:', {
-    width: dot.style.width,
-    height: dot.style.height,
-    transform: dot.style.transform,
   });
 
   let tl1 = gsap.timeline({
@@ -100,28 +68,6 @@ export function init() {
       scrub: true,
       pin: true,
       pinSpacing: true,
-      onEnter: () => console.log('[scroll-anim] ST: onEnter #question'),
-      onLeave: () => console.log('[scroll-anim] ST: onLeave #question'),
-      onEnterBack: () => console.log('[scroll-anim] ST: onEnterBack #question'),
-      onLeaveBack: () => console.log('[scroll-anim] ST: onLeaveBack #question'),
-      onUpdate: (self) => {
-        console.log('[scroll-anim] ST progress:', {
-          progress: self.progress.toFixed(3),
-          direction: self.direction,
-          isActive: self.isActive,
-          scroll: window.scrollY,
-          start: self.start,
-          end: self.end,
-        });
-      },
-      onRefresh: (self) => {
-        console.log('[scroll-anim] ST onRefresh:', {
-          start: self.start,
-          end: self.end,
-          pinSpacing: self.spacer ? self.spacer.offsetHeight : 'no spacer',
-          triggerHeight: q.offsetHeight,
-        });
-      },
     },
     defaults: { ease: "none" }
   });
@@ -129,69 +75,25 @@ export function init() {
   tl1
   .to(title, {
     opacity: 1,
-    onUpdate: function() {
-      console.log('[scroll-anim] title tween progress:', this.progress().toFixed(3), 'opacity:', gsap.getProperty(title, "opacity"));
-    }
   })
   .fromTo(dot, {
     scale: 0,
     x: () => {
       let markBounds = mark.getBoundingClientRect(),
           px = markBounds.left + markBounds.width * 0.40;
-      let val = px - q.getBoundingClientRect().width / 2;
-      console.log('[scroll-anim] dot x() =', val, { markLeft: markBounds.left, markWidth: markBounds.width, qWidth: q.getBoundingClientRect().width });
-      return val;
+      return px - q.getBoundingClientRect().width / 2;
     },
     y: () => {
       let markBounds = mark.getBoundingClientRect(),
           py = markBounds.top + markBounds.height * 0.73;
-      let val = py - q.getBoundingClientRect().height / 2;
-      console.log('[scroll-anim] dot y() =', val, { markTop: markBounds.top, markHeight: markBounds.height, qHeight: q.getBoundingClientRect().height });
-      return val;
+      return py - q.getBoundingClientRect().height / 2;
     }
   }, {
     x: 0,
     y: 0,
     ease: "power1.in",
     scale: 1,
-    onUpdate: function() {
-      console.log('[scroll-anim] dot tween progress:', this.progress().toFixed(3), 'scale:', gsap.getProperty(dot, "scaleX"));
-    }
   });
-
-  console.log('[scroll-anim] tl1 created, duration:', tl1.duration());
-  console.log('[scroll-anim] tl1 scrollTrigger:', {
-    start: tl1.scrollTrigger?.start,
-    end: tl1.scrollTrigger?.end,
-    pin: tl1.scrollTrigger?.pin,
-  });
-
-  // Log all ScrollTrigger instances
-  console.log('[scroll-anim] All ScrollTriggers:', ScrollTrigger.getAll().map((st, i) => ({
-    index: i,
-    trigger: st.trigger?.id || st.trigger?.className || st.trigger?.tagName,
-    start: st.start,
-    end: st.end,
-    pin: !!st.pin,
-  })));
-
-  // Log scroll events on window to see if they fire
-  let scrollCount = 0;
-  window.addEventListener('scroll', () => {
-    scrollCount++;
-    if (scrollCount % 10 === 0) {
-      console.log('[scroll-anim] window scroll event #' + scrollCount, 'scrollY:', window.scrollY);
-    }
-  }, { passive: true });
-
-  // Log wheel events on #question to see if they're being captured
-  q.addEventListener('wheel', (e) => {
-    console.log('[scroll-anim] wheel on #question:', {
-      deltaY: e.deltaY,
-      defaultPrevented: e.defaultPrevented,
-      scrollY: window.scrollY,
-    });
-  }, { passive: true });
 
   // === Typing effect ===
   const text = " is a chronic (long-lasting) health condition that affects how your body turns food into energy.";
@@ -344,8 +246,6 @@ export function init() {
     .to("#glu-slide-4", { opacity: 0, y: -30, duration: 0.5 })
     .fromTo("#glu-slide-5", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5 }, "<")
     .to({}, { duration: 1 });                                       // hold slide 5
-
-  console.log('[scroll-anim] init() complete');
 }
 
 // Separate export — must be called AFTER async modules (metrics-explain)
@@ -363,52 +263,16 @@ export function initPanel2() {
     dismissed = true;
   });
 
-  console.log('[scroll-anim] panel-2 before ST:', {
-    offsetTop: panel2.offsetTop,
-    offsetHeight: panel2.offsetHeight,
-    overflow: getComputedStyle(panel2).overflow,
-    position: getComputedStyle(panel2).position,
-    height: getComputedStyle(panel2).height,
-    rect: panel2.getBoundingClientRect(),
-  });
-
-  const panel2Trigger = ScrollTrigger.create({
+  ScrollTrigger.create({
     trigger: panel2,
     start: "top top",
     end: "+=100%",
     pin: true,
     pinSpacing: true,
-    markers: true,   // TEMPORARY: visible start/end markers
-    onEnter: () => console.log('[scroll-anim] panel-2 ST: onEnter'),
-    onLeave: () => console.log('[scroll-anim] panel-2 ST: onLeave'),
-    onEnterBack: () => console.log('[scroll-anim] panel-2 ST: onEnterBack'),
-    onLeaveBack: () => console.log('[scroll-anim] panel-2 ST: onLeaveBack'),
     onUpdate: (self) => {
-      console.log('[scroll-anim] panel-2 ST progress:', {
-        progress: self.progress.toFixed(3),
-        direction: self.direction,
-        isActive: self.isActive,
-        pin: self.pin,
-      });
       if (!dismissed && self.progress > 0.3 && panel2Overlay.classList.contains("hidden")) {
         panel2Overlay.classList.remove("hidden");
       }
     },
-    onRefresh: (self) => {
-      console.log('[scroll-anim] panel-2 ST onRefresh:', {
-        start: self.start,
-        end: self.end,
-        pin: self.pin,
-        spacer: self.spacer ? self.spacer.offsetHeight : 'no spacer',
-        triggerHeight: panel2.offsetHeight,
-      });
-    }
-  });
-
-  console.log('[scroll-anim] panel-2 ST created:', {
-    start: panel2Trigger.start,
-    end: panel2Trigger.end,
-    pin: panel2Trigger.pin,
-    isActive: panel2Trigger.isActive,
   });
 }
