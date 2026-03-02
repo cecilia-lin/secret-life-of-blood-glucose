@@ -257,34 +257,38 @@
             </section>
 
             <section id="panel-4">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12">
-                            <h2>Glucose Metrics Distribution</h2>
-                            <div class="controls-container">
-                                <div class="metric-selector">
-                                    <label>Select Metric:</label>
-                                    <select id="metric-select">
-                                        <option value="glucose-excursion">Glucose Excursion</option>
-                                        <option value="excursion-time">Glucose Excursion Time</option>
-                                        <option value="recovery-time">Glucose Recovery Time</option>
-                                    </select>
-                                </div>
-                                <div class="group-toggles">
-                                    <label>Select Groups:</label>
-                                    <div class="checkbox-group">
-                                        <input type="checkbox" id="diabetic-toggle" checked>
-                                        <label for="diabetic-toggle">Diabetic</label>
-                                        <input type="checkbox" id="prediabetic-toggle" checked>
-                                        <label for="prediabetic-toggle">Pre-diabetic</label>
-                                        <input type="checkbox" id="nondiabetic-toggle" checked>
-                                        <label for="nondiabetic-toggle">Non-diabetic</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="distribution-plot"></div>
-                            <p class="step-description">This visualization shows the distribution of different glucose metrics across diabetic groups. The normal distributions are calculated using the mean and standard deviation of each group's data for glucose metrics. Compare how different metrics vary between diabetic, pre-diabetic, and non-diabetic individuals.</p>
+                <h2 class="section-header">Glucose Metrics Distribution</h2>
+                <div id="distribution-plot">
+                    <div class="panel-overlay">
+                    <div class="controls-container">
+                        <div class="metric-selector">
+                            <label>Select Metric:</label>
+                            <select id="metric-select">
+                                <option value="glucose-excursion">Glucose Excursion</option>
+                                <option value="excursion-time">Glucose Excursion Time</option>
+                                <option value="recovery-time">Glucose Recovery Time</option>
+                            </select>
                         </div>
+                        <div class="group-toggles">
+                            <label>Select Groups:</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="diabetic-toggle" checked>
+                                <label for="diabetic-toggle"><span class="color-dot diabetic"></span>Diabetic</label>
+                                <input type="checkbox" id="prediabetic-toggle" checked>
+                                <label for="prediabetic-toggle"><span class="color-dot prediabetic"></span>Pre-diabetic</label>
+                                <input type="checkbox" id="nondiabetic-toggle" checked>
+                                <label for="nondiabetic-toggle"><span class="color-dot nondiabetic"></span>Non-diabetic</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="observations-container">
+                        <label>Observations:</label>
+                        <div class="observation-buttons">
+                            <button class="observation-btn active" data-observation="1">1</button>
+                            <button class="observation-btn" data-observation="2">2</button>
+                        </div>
+                        <p class="observation-text"></p>
+                    </div>
                     </div>
                 </div>
             </section>

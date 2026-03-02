@@ -296,7 +296,7 @@ function plotData(nonDiabeticParticipants, cgmData, mealData) {
       .attr("x1", x(mealTime))
       .attr("x2", x(mealTime))
       .attr("y1", 0)
-      .attr("y2", rowHeight)
+      .attr("y2", plotHeight)
       .attr("stroke", "red")
       .attr("stroke-dasharray", "5,5")
       .append("title")
