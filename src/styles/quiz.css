@@ -1,0 +1,142 @@
+/* Center the quiz section */
+#quiz {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #c6dbef;
+  padding: 20px;
+}
+
+/* Quiz container */
+.quiz-container {
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Style the quiz heading */
+.quiz-container h3 {
+  width: 100%;
+  margin: auto;
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Style all quiz questions */
+.quiz-question {
+  margin-bottom: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+/* Style labels */
+.quiz-question label {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #555;
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* Style input fields */
+.quiz-question input,
+.quiz-question select {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: border 0.3s ease-in-out;
+  text-align: center;
+}
+
+/* Highlight input fields on focus */
+.quiz-question input:focus,
+.quiz-question select:focus {
+  border-color: #007bff;
+  box-shadow: 0px 0px 8px rgba(0, 123, 255, 0.5);
+}
+
+/* Remove number input spinners */
+.quiz-question input[type="number"]::-webkit-inner-spin-button,
+.quiz-question input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Style radio button container */
+.quiz-question div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+/* Style radio buttons */
+.quiz-question input[type="radio"] {
+  accent-color: var(--color-blue);
+}
+
+/* Apply blinking animation only initially */
+.hint p {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--color-blue);
+  display: block;
+  margin-bottom: 8px;
+  margin: 0;
+  position: relative;
+  transform: translateY(-10px);
+  animation: blink 2s infinite ease-in-out;
+}
+
+/* Stop blinking when 'no-blink' class is added */
+.hint p.no-blink {
+  animation: none;
+  opacity: 1;
+  color: var(--color-blue);
+}
+
+#quiz-result {
+  justify-content: center;
+  align-items: center;
+  height: 70%;
+  text-align: center;
+  width: 100%;
+}
+
+#match {
+  font-size: 1.2rem;
+  font-family: "Red Hat Text", sans-serif;
+  text-align: center;
+}
+
+#result {
+  margin: 0;
+  font-size: 1rem;
+  font-family: "Red Hat Text", sans-serif;
+  text-align: center;
+  font-weight: 600;
+  width: 100%;
+}
+
+#header {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-blue);
+  font-family: "Red Hat Text", sans-serif;
+  text-align: center;
+}

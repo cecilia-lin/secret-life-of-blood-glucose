@@ -1,0 +1,53 @@
+#diabeties_description {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+#typing-text::after {
+  content: "|";
+  display: inline-block;
+  animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+#question {
+  background-color: var(--color-yellow);
+  overflow: clip;
+}
+
+#question section {
+  position: relative;
+  height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#question p {
+  font-size: 100px;
+  text-align: center;
+  position: relative;
+  font-weight: 900;
+  color: #fff;
+  opacity: 0;
+  left: 200px;
+}
+
+#question .dot {
+  background-color: white;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  position: absolute;
+  pointer-events: none;
+}

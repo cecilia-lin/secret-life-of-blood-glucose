@@ -1,0 +1,12 @@
+/* Import Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Gluten:wght@600&family=Space+Mono&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Text:ital,wght@0,300..700;1,300..700&display=swap');
+
+/* Global Variables */
+:root {
+  --color-placemat: oklch(66.89% 0.0807 246.33 / 50%);
+  --color-yellow: oklch(81.98% 0.1466 81.17);
+  --color-blue: oklch(66.89% 0.0807 246.33 );
+  --color-pastel: #eff2f1;
+}

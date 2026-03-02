@@ -1,0 +1,198 @@
+/* Global Styles */
+html {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  max-width: 100vw;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, p {
+  text-align: center;
+  font-family: "DM Serif Text", serif;
+  margin-left: 10%;
+  margin-right: 10%;
+  padding: 2%;
+}
+
+h3, p {
+  font-weight: 200;
+}
+
+p {
+  text-align: left;
+}
+
+.scroll-indicator {
+  animation: bounce 1.5s infinite;
+  width: 50px;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+
+a {
+  color: var(--color-placemat);
+}
+
+/* Section Styles */
+section {
+  min-height: 100vh;
+  height: 100vh;
+  width: 100%;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 2rem;
+  overflow: clip;
+}
+
+h2 {
+  text-align: center;
+}
+
+h4 {
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+/* Description Styles */
+.description {
+  max-width: 80vw;
+  padding: 20px;
+  background: var(--color-yellow);
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.description p {
+  font-size: 1.8rem;
+  line-height: 1.6;
+  font-weight: 200;
+  color: white;
+  font-family: "Red Hat Text", sans-serif;
+}
+
+#compare {
+  background: var(--color-blue);
+}
+
+/* Paragraph Container */
+.paragraph {
+  width: 100%;
+  padding: 20px;
+  text-align: center;
+}
+
+.paragraph .highlight {
+  width: 80vw;
+  font-size: 5.5rem;
+}
+
+.details {
+  font-size: 1.5rem;
+  width: 50%;
+  line-height: 1.6;
+  font-weight: 300;
+  font-family: "Red Hat Text", sans-serif;
+  margin: auto;
+  display: block;
+}
+
+.section-header {
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--color-blue);
+  margin-bottom: 10px;
+}
+
+.y-section-header {
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--color-yellow);
+  margin-bottom: 10px;
+}
+
+#yellow {
+  color: var(--color-yellow);
+}
+
+.highlight {
+  font-size: 5rem;
+  font-weight: bold;
+  color: var(--color-yellow);
+  margin-bottom: 10px;
+  width: 100vw;
+}
+
+/* Axis and Title Styles */
+.axis-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+  margin: auto;
+}
+
+/* Container Styles */
+.container-fluid {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* SVG defaults */
+svg {
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  background: white;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Button base */
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.2rem;
+  color: white;
+  background: var(--color-blue);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out;
+  margin-top: 10px;
+  font-family: "Red Hat Text", sans-serif;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}

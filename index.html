@@ -5,26 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Secret Life of Blood Glucose</title>
 
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="assets/pics/bread.png">
-
-    <script type="module" src="global.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="longRun.js" type="module"></script>
-    <script src="distribution.js" type="module"></script>
-    <script src="rolling_glucose.js" type="module"></script>
-    <script src="quiz.js" type="module"></script>
-    <script src="metrics_explain.js" type="module"></script>
-    <script src="meals.js" type="module"></script>
-
-    <!-- scrolling trigger animations -->
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/Observer.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollToPlugin.min.js"></script>
-
-     <script src="scrolling_animation.js" type="module"></script>
+    <link rel="icon" type="image/x-icon" href="/pics/bread.png">
+    <script type="module" src="/src/main.js"></script>
 </head>
 <body>
     <div id="page" class="site">
@@ -44,19 +26,19 @@
 
             <section id="intro" class="full-screen">
                 <div class="mat">
-                    <img class="fork" src="assets/pics/fork.png" alt="fork">
+                    <img class="fork" src="/pics/fork.png" alt="fork">
                     <div class="plate">
                         <div class="text">Secret <br> Life of <br> Blood <br> Glucose</div>
                     </div>
-                    <img class="knife" src="assets/pics/knife.png" alt="knife">
+                    <img class="knife" src="/pics/knife.png" alt="knife">
                 </div>
-                <img  class="scroll-indicator" src="assets/pics/down.png">
+                <img  class="scroll-indicator" src="/pics/down.png">
             </section>
 
             <section class="full-screen" id="question">
                 <div class="dot"></div>
                 <p id="title">What is Diabetes <span>?</span></p>
-                
+
             </section>
 
             <section id="diabeties_description" class="full-screen">
@@ -64,34 +46,34 @@
                     <h1 class = "highlight" >Diabetes
                         <span id="typing-text" class="info"></span> <!-- Empty span for typing effect --> </h1>
                 </div>
-                
+
             </section>
-            
+
 
             <section class = "full-screen">
                 <div class="description">
-                    <p style="text-align: left;">Your body converts food into glucose, which enters the bloodstream. 
-                        The pancreas releases insulin to help cells absorb glucose for energy. 
-                        In diabetes, the body either lacks insulin or doesn’t use it properly, causing high blood sugar. 
+                    <p style="text-align: left;">Your body converts food into glucose, which enters the bloodstream.
+                        The pancreas releases insulin to help cells absorb glucose for energy.
+                        In diabetes, the body either lacks insulin or doesn't use it properly, causing high blood sugar.
                         Over time, this can lead to serious health issues like heart disease, vision loss, and kidney disease.</p>
                 </div>
             </section>
 
-            
+
             <section id="hook">
                 <div class="stats-container">
-                    <p style="margin: 0; padding: 0;"> Accroding to Centers for Disease Control and Prevention,</p>
+                    <p style="margin: 0; padding: 0;"> According to Centers for Disease Control and Prevention,</p>
                     <div class="stat">
                         <h1 class="highlight">
-                            <span class="count" data-target="11.6">0</span>% 
+                            <span class="count" data-target="11.6">0</span>%
                             <span class="info">of the US population have</span>
                             <span class="subtitle">diabetes.</span>
                         </h1>
                     </div>
-            
+
                     <div class="stat">
                         <h1 class="highlight">
-                            Over <span class="count" data-target="38.0">0</span>% 
+                            Over <span class="count" data-target="38.0">0</span>%
                             <span class="info">of adults have</span>
                             <span class="subtitle">prediabetes.</span>
                         </h1>
@@ -102,38 +84,38 @@
             <section class = "full-screen">
                 <div id = "compare" class="description">
                     <p>
-                        Prediabetes is when blood sugar levels are higher than normal but not high enough to be diagnosed as type 2 diabetes. 
+                        Prediabetes is when blood sugar levels are higher than normal but not high enough to be diagnosed as type 2 diabetes.
                         It indicates that the body is becoming resistant to insulin or struggling to regulate blood sugar effectively.
                     </p>
-                    </div>
+                </div>
             </section>
-        
-            
+
+
             <section class="page page1">
-                <div class="paragragh">
+                <div class="paragraph">
                     <h1 class="y-section-header" > Type 2 Diabetes</h1>
-                    <p class="details"> 
-                    More children, teens, and young adults are developing type 2 diabetes than in the past. 
-    
+                    <p class="details">
+                    More children, teens, and young adults are developing type 2 diabetes than in the past.
+
                     Type 2 diabetes is largely preventable with lifestyle changes like healthy eating, exercise, and weight management.<br><br>
-                    In our dataset, the participants who are in diabetic group are diagnosed with Type 2 Diabetes. 
+                    In our dataset, the participants who are in diabetic group are diagnosed with Type 2 Diabetes.
                     </p>
                 </div>
                 <button id="goPage2" class="page__button"> Type 1 Diabetes ></button>
             </section>
 
             <section class="page page2">
-                <div class="paragragh">
+                <div class="paragraph">
                 <h1 class="section-header"> Type 1 Diabetes</h1>
-                <p class="details"> Type 1 diabetes is an autoimmune disease where the immune system mistakenly attacks the insulin-producing beta cells in the pancreas, leading to little or no insulin production. 
-                    As a result, the body cannot regulate blood sugar levels properly. 
+                <p class="details"> Type 1 diabetes is an autoimmune disease where the immune system mistakenly attacks the insulin-producing beta cells in the pancreas, leading to little or no insulin production.
+                    As a result, the body cannot regulate blood sugar levels properly.
                     It is usually diagnosed in children, teens, or young adults, but can occur at any age. <br><br>
                     Unlike type 2 diabetes, it is not preventable and requires lifelong insulin therapy through injections or a pump.
                 </p>
             </div>
-                <button id="goBack" class="page__button page__button--back"> < Type 2 Diabetes </button>
+                <button id="goBack" class="page__button page__button--back"> &lt; Type 2 Diabetes </button>
             </section>
-              
+
               <div id="transition"></div>
 
             <section id="quiz">
@@ -170,7 +152,7 @@
                                 <option value="other">Prefer Not to Answer</option>
                             </select>
                         </div>
-                       
+
                         <button type="button" id="next-button" disabled>Next</button>
                         <button type="submit" style="display: none;">Submit</button>
                     </form>
@@ -179,122 +161,148 @@
             </section>
 
             <section id="meal_frequency" class="full-screen">
-                <div class="container">
-                    <div id="select" class="dropdown"></div>
-                    <div id="graph-nondiabetic" class="graph-container"></div>
-                    <div id="graph-prediabetic" class="graph-container"></div>
-                    <div id="graph-diabetic" class="graph-container"></div>
-                </div>
-            </section>
-
-            <section class="roll" style="margin-top: 0;">
-                <div class="description">
-                    <p style="text-align: center; font-size: 1.5em; color: white; font-weight: 600;">
-                        Should We Avoid Fixed Eating Schedules to Stay Healthy?
-                    </p>
-                </div>
-            </section>
-
-            <section class="roll">
-                <div class="description">
-                    <p>The reality is quite different - people with diabetes often follow rigorous eating schedules because their meals need to be carefully controlled. This is necessary because their bodies struggle to regulate glucose naturally. The following visualization shows glucose level changes over time for 15 participants, highlighting fluctuations across diabetic groups through a moving dot.</p>
-                </div>
-            </section>
-
-            <section id="rollig_glu_dot" class="full-screen">
-                <div class="chart-container">
-                    <div class="roll-title" id="non-diabetic-title">Non-Diabetic Participants<div>
-                    <div class="line-category" id="non-diabetic-vis">
-                        
+                <div class="meal-layout">
+                    <div class="meal-charts-panel">
+                        <div id="graph-nondiabetic" class="graph-container"></div>
+                        <div id="graph-prediabetic" class="graph-container"></div>
+                        <div id="graph-diabetic" class="graph-container"></div>
                     </div>
-                    <div class="roll-title" id="pre-diabetic-title">Pre-Diabetic Participants<div>
-                    <div class="line-category" id="pre-diabetic-vis">
-                     
-                    </div>
-                    <div class="roll-title" id="diabetic-title">Diabetic Participants<div>
-                    <div class="line-category" id="diabetic-vis">
-                        
-                    </div>
-                </div>
-            </section>
-
-            <section class="roll" style="margin-top: 0;">
-                <div class="description">
-                    <p>The blood glucose trend can be compared to surfing on a wave—while non-diabetic individuals experience a relatively calm and predictable ride, pre-diabetic individuals encounter a bit more excitement with occasional swells.
-                         In contrast, diabetic individuals face a wild and unpredictable journey, with extreme fluctuations resembling the chaos of stormy waves.</p>
-                    <h2 style="text-align: center; margin-top: 50px; font-size: 1.5em; color: skyblue; font-weight: 600;">But, is there a systematic way?</h2>
-                </div>
-            </section>
-
-            <section id="glu_metrics_explain">
-                <h2 class="section-header">How we measure glucose variance?</h2>
-                <div id="explain_graph"></div>
-            </section>
-
-            <section class="roll analysis-section">
-                <div class="description">
-                    <h2 class="section-header">Controlled Meal Analysis</h2>
-                    <p style="color: black;">In our study, participants followed a controlled meal schedule:</p>
-                    <ul class="meal-list details" style="list-style-type: none; padding: 0; margin: 5px 0;">
-                        <li>• Identical protein shake for breakfast</li>
-                        <li>• Standardized Chipotle meal for lunch</li>
-                    </ul>
-                    <p style="color: black;">This controlled environment allows us to analyze three key metrics:</p>
-                    <ul class="metrics-list details" style="list-style-type: none; padding: 0; margin: 5px 0;">
-                        <li>• Glucose excursion (spike height after meals)</li>
-                        <li>• Peak time (duration until maximum glucose)</li>
-                        <li>• Recovery duration (time to return to baseline)</li>
-                    </ul>
-                    <p style="color: black;">These measurements help us understand how different diabetic conditions affect glucose regulation.</p>
-                </div>
-            </section>
-
-            <section id="panel-4">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12">
-                            <h2 style = "margin-top: 150px;" >Glucose Metrics Distribution</h2>
-                            <div class="controls-container">
-                                <div class="metric-selector">
-                                    <label>Select Metric:</label>
-                                    <select id="metric-select">
-                                        <option value="glucose-excursion">Glucose Excursion</option>
-                                        <option value="excursion-time">Glucose Excursion Time</option>
-                                        <option value="recovery-time">Glucose Recovery Time</option>
-                                    </select>
-                                </div>
-                                <div class="group-toggles">
-                                    <label>Select Groups:</label>
-                                    <div class="checkbox-group">
-                                        <input type="checkbox" id="diabetic-toggle" checked>
-                                        <label for="diabetic-toggle">Diabetic</label>
-                                        <input type="checkbox" id="prediabetic-toggle" checked>
-                                        <label for="prediabetic-toggle">Pre-diabetic</label>
-                                        <input type="checkbox" id="nondiabetic-toggle" checked>
-                                        <label for="nondiabetic-toggle">Non-diabetic</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="distribution-plot"></div>
-                            <p class="step-description">This visualization shows the distribution of different glucose metrics across diabetic groups. The normal distributions are calculated using the mean and standard deviation of each group's data for glucose metrics. Compare how different metrics vary between diabetic, pre-diabetic, and non-diabetic individuals.</p>
+                    <div class="meal-notes-panel">
+                        <div class="meal-note-card">
+                            <h3 class="meal-note-title"></h3>
+                            <p class="meal-note-body"></p>
+                        </div>
+                        <div class="meal-nav">
+                            <button id="meal-back" class="meal-nav-btn">&larr; Back</button>
+                            <span class="meal-step-indicator"></span>
+                            <button id="meal-next" class="meal-nav-btn">Next &rarr;</button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            
-
-            <section id = "instruction">
-                <div class="description">
-                    <h1 class="section-header">Instructions</h1>
-                    <p class = "details" id="ui"> • Use the control panel to explore the glucose patterns of participants with different diabetic statuses. <br>
-                        • Select a participant category and adjust the time range to view the glucose levels over time. <br>
-                        • Hover on the meal icons to see nutrients breakdown. </p>
+            <section id="meal-qa" class="full-screen">
+                <div class="meal-slide" id="meal-question">
+                    <p style="font-size: 1.5em; color: white; font-weight: 600;">
+                        Should We Avoid Fixed Eating Schedules to Stay Healthy?
+                    </p>
+                </div>
+                <div class="meal-slide" id="meal-answer">
+                    <p>Actually, people with diabetes often need strict eating schedules because their bodies can't regulate glucose naturally. The visualization below tracks glucose fluctuations across 15 participants by diabetic group.</p>
                 </div>
             </section>
 
+            <section id="rollig_glu_dot" class="full-screen">
+                <div class="glu-layout">
+                    <div class="glu-chart-panel">
+                        <div class="chart-container">
+                            <div class="roll-title" id="non-diabetic-title">Non-Diabetic Participants</div>
+                            <div class="line-category" id="non-diabetic-vis"></div>
+                            <div class="roll-title" id="pre-diabetic-title">Pre-Diabetic Participants</div>
+                            <div class="line-category" id="pre-diabetic-vis"></div>
+                            <div class="roll-title" id="diabetic-title">Diabetic Participants</div>
+                            <div class="line-category" id="diabetic-vis"></div>
+                        </div>
+                    </div>
+                    <div class="glu-text-panel">
+                        <div class="glu-text-slide" id="glu-slide-1" style="opacity: 1;">
+                            <p>The blood glucose trend can be compared to surfing on a wave...</p>
+                        </div>
+                        <div class="glu-text-slide" id="glu-slide-2">
+                            <p><strong>Non-diabetic</strong> individuals experience a relatively calm and predictable ride.</p>
+                        </div>
+                        <div class="glu-text-slide" id="glu-slide-3">
+                            <p><strong>Pre-diabetic</strong> individuals encounter a bit more excitement with occasional swells.</p>
+                        </div>
+                        <div class="glu-text-slide" id="glu-slide-4">
+                            <p>In contrast, <strong>diabetic</strong> individuals face a wild and unpredictable journey, with extreme fluctuations resembling the chaos of stormy waves.</p>
+                        </div>
+                        <div class="glu-text-slide" id="glu-slide-5">
+                            <p>Is there a systematic way to measure the glucose variance?</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="glu_metrics_explain">
+                <h2 class="section-header">Measuring Glucose Variance</h2>
+                <div id="explain_content">
+                    <div id="explain_graph"></div>
+                    <div id="explain_text">
+                        <div class="explain-phase active" data-phase="0">
+                            <p>In our study, participants followed a controlled meal schedule:</p>
+                            <ul>
+                                <li>Identical protein shake for breakfast</li>
+                                <li>Standardized Chipotle meal for lunch</li>
+                            </ul>
+                            <p>This controlled environment allows us to analyze three key metrics that reveal how different diabetic conditions affect glucose regulation.</p>
+                        </div>
+                        <div class="explain-phase" data-phase="1">
+                            <h3>Glucose Excursion Time</h3>
+                            <p>The time it takes to reach the maximum glucose level after a meal.</p>
+                            <p>This metric captures how quickly the body absorbs glucose from food. A longer excursion time may indicate slower digestion or impaired insulin response.</p>
+                        </div>
+                        <div class="explain-phase" data-phase="2">
+                            <h3>Glucose Excursion</h3>
+                            <p>The spike height — the maximum glucose level reached after having a meal.</p>
+                            <p>Higher excursions suggest the body is less effective at regulating glucose uptake, a hallmark of insulin resistance.</p>
+                        </div>
+                        <div class="explain-phase" data-phase="3">
+                            <h3>Recovery Duration</h3>
+                            <p>The time it takes for glucose to return to its baseline level after a meal.</p>
+                            <p>Longer recovery times indicate the body struggles to clear excess glucose from the bloodstream.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="panel-4">
+                <h2 class="section-header">Glucose Metrics Distribution</h2>
+                <div id="distribution-plot">
+                    <div class="panel-overlay">
+                    <div class="controls-container">
+                        <div class="metric-selector">
+                            <label>Select Metric:</label>
+                            <select id="metric-select">
+                                <option value="glucose-excursion">Glucose Excursion</option>
+                                <option value="excursion-time">Glucose Excursion Time</option>
+                                <option value="recovery-time">Glucose Recovery Time</option>
+                            </select>
+                        </div>
+                        <div class="group-toggles">
+                            <label>Select Groups:</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="diabetic-toggle" checked>
+                                <label for="diabetic-toggle"><span class="color-dot diabetic"></span>Diabetic</label>
+                                <input type="checkbox" id="prediabetic-toggle" checked>
+                                <label for="prediabetic-toggle"><span class="color-dot prediabetic"></span>Pre-diabetic</label>
+                                <input type="checkbox" id="nondiabetic-toggle" checked>
+                                <label for="nondiabetic-toggle"><span class="color-dot nondiabetic"></span>Non-diabetic</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="observations-container">
+                        <label>Observations:</label>
+                        <div class="observation-buttons">
+                            <button class="observation-btn active" data-observation="1">1</button>
+                            <button class="observation-btn" data-observation="2">2</button>
+                        </div>
+                        <p class="observation-text"></p>
+                    </div>
+                    </div>
+                </div>
+            </section>
+
+
+
             <section id="panel-2">
-                <div id="tooltip" class="tooltip" style="display: none;"></div>
+                <div id="panel2-overlay" class="panel2-overlay hidden">
+                    <div class="panel2-notification">
+                        <button class="panel2-notification-close" aria-label="Close">&times;</button>
+                        <p>The chart initializes with participants that most closely match <strong>your profile</strong> from each group, based on the quiz you completed.</p>
+                        <p>Feel free to play around with the <strong>time range slider</strong>, select different participants, and toggle <strong>meal icons</strong> to explore their meal frequency!</p>
+                    </div>
+                </div>
                 <div id="panel-2-flex-container">
                     <div class="control-panel-wrapper">
                         <div class="control-panel">
@@ -322,55 +330,47 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="visualization-wrapper">
                         <div class="title-container">
-                            <h3 id="svg-title">Glucose Level Over Time</h3>
-                        
+                            <h2 class="section-header">Glucose Level Over Time</h2>
+
                             <div class="toggle-container">
                                 <input type="checkbox" id="toggle-meal-icons" checked>
                                 <label for="toggle-meal-icons" class="toggle-label">Meal Icons</label>
                             </div>
                         </div>
-                        
-                          
+
+
                         <div id="meal-type-legend" class="legend">
-                            
+
                             <div class="legend-items"></div>
                         </div>
                     </div>
-                  
+
                 </div>
             </section>
 
             <section id="map" class="conclusion">
                 <h1> Takeaway</h1>
-                <div class="paragragh">
-                    <p class="details" id="conclude">Diabetes, particularly Type 2, affects how the body regulates blood glucose, making meal control crucial. From 45 participants, we randomly selected 5 from each group—non-diabetic, pre-diabetic, and diabetic—to analyze glucose trends. While non-diabetics eat irregularly, diabetics follow structured meals out of necessity. Visualizations show that non-diabetics have stable glucose, pre-diabetics experience moderate fluctuations, and diabetics face extreme spikes. Controlled meal analysis reveals diabetics have higher glucose excursions, longer peaks, and slower recovery. Aggregated metrics confirm greater variability in diabetics, emphasizing the need for meal regulation. Interactive tools further explore meal and snack impacts.
+                <div class="paragraph">
+                    <p class="details" id="conclude">Diabetes, particularly type 2, affects how the body regulates blood glucose, making meal control critical. That is the core reason why the diabetic group must rigorously follow a diet. From the data, it seems like the people who strictly follow three meals a day tend to demonstrate more fluctuations in blood glucose, which reveals their unhealthy status. This is explained by the previous observation — their diet is closely controlled, and they must strictly follow the dietary guidelines provided by their doctors.
                 </p>
                 </div>
             </section>
 
-            <!-- acknowledgement page where  -->
+            <!-- acknowledgements -->
             <section class="acknowledgments">
                 <div class="description">
                     <h2 class="section-header">Meet the Team</h2>
                     <div class="team-list">
                         <div class="team-member" onclick="window.open('https://g7xu.github.io/', '_blank')">
-                            <h3>Data Storyteller & Interactive Viz Developer</h3>
+                            <h3>Developer & Designer</h3>
                             <p>Guoxuan Xu</p>
                         </div>
                         <div class="team-member">
-                            <h3>UX/UI Designer</h3>
+                            <h3>Developer & Designer</h3>
                             <p>Cecilia Lin</p>
-                        </div>
-                        <div class="team-member">
-                            <h3>Animation Specialist</h3>
-                            <p>Ashley Chu</p>
-                        </div>
-                        <div class="team-member">
-                            <h3>Interactive Viz Developer</h3>
-                            <p>Felix Najera</p>
                         </div>
                     </div>
 
@@ -381,5 +381,6 @@
                     </div>
                 </div>
             </section>
+    </div>
 </body>
 </html>

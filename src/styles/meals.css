@@ -1,0 +1,126 @@
+/* Meal Frequency Section */
+#meal_frequency {
+  flex-direction: column;
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+  padding: 40px 0;
+}
+
+/* Two-panel layout */
+.meal-layout {
+  display: flex;
+  gap: 40px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  align-items: center;
+}
+
+.meal-charts-panel {
+  flex: 3;
+  min-width: 0;
+}
+
+.meal-notes-panel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Graph containers */
+.graph-container {
+  margin: 12px 0;
+  width: 100%;
+  max-width: 100%;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.graph-wrapper {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+/* Note card */
+.meal-note-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 28px 24px;
+}
+
+.meal-note-card .meal-note-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 12px 0;
+  padding: 0;
+}
+
+.meal-note-card .meal-note-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #444;
+  margin: 0;
+  padding: 0;
+}
+
+/* Navigation */
+.meal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.meal-nav-btn {
+  padding: 8px 18px;
+  font-size: 0.95rem;
+  font-family: "Red Hat Text", sans-serif;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  background: white;
+  color: #1d1d1f;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.meal-nav-btn:hover:not(:disabled) {
+  background: #0071e3;
+  color: white;
+  border-color: #0071e3;
+}
+
+.meal-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Step indicator dots */
+.meal-step-indicator {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.meal-step-indicator .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d2d2d7;
+  transition: background 0.2s;
+}
+
+.meal-step-indicator .dot.active {
+  background: #0071e3;
+}
