@@ -1,4 +1,5 @@
 import { loadSampledBio } from '../utils/data-loader.js';
+import { selectParticipants } from './global-chart.js';
 
 export function init() {
   const quizForm = document.getElementById('quiz-form');
@@ -66,6 +67,10 @@ export function init() {
 
     const k = 3;
     const matches = findClosestMatches(userBMI, gender, k);
+
+    window.__quizMatches = matches;
+
+    selectParticipants([matches["Non-diabetic"], matches["Pre-diabetic"], matches["Diabetic"]]);
 
     quizForm.innerHTML = '';
 

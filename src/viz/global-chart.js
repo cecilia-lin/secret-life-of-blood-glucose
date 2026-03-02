@@ -7,7 +7,7 @@ import { parseTimestamp } from '../utils/parse-timestamp.js';
 const BASE = import.meta.env.BASE_URL;
 const margin = { top: 40, right: 50, bottom: 50, left: 60 };
 let activeParticipants = new Set();
-let timeRange = [1440, 14385];
+let timeRange = [1440, 2880];
 let data, processedData, xScale, yScale, colorScale;
 let tooltip;
 let tooltipDiv;
@@ -379,10 +379,10 @@ function updateVisualization() {
           group.append('image')
               .attr('class', 'meal-dot')
               .attr('xlink:href', mealIcons[participant.diabetic_level][d.mealType])
-              .attr('width', 20)
-              .attr('height', 20)
-              .attr('x', -10)
-              .attr('y', -10)
+              .attr('width', 24)
+              .attr('height', 24)
+              .attr('x', -12)
+              .attr('y', -12)
               .style('opacity', isMealIconsVisible ? 1 : 0)
               .transition()
               .duration(750);
@@ -493,69 +493,37 @@ function plotData(participants) {
   const containerHeight = container.node().clientHeight;
   const width = containerWidth - margin.left - margin.right;
 
-  const legendContainer = svg.append("g")
-    .attr("class", "legend-container")
-    .attr("transform", `translate(${width + margin.right - 250}, ${margin.top})`);
+  const legendItemsEl = document.querySelector('#meal-type-legend .legend-items');
+  if (legendItemsEl) {
+    legendItemsEl.innerHTML = '';
 
-  const legendData = [
-    { label: 'Non-diabetic', color: '#2ecc71' },
-    { label: 'Pre-diabetic', color: '#f1c40f' },
-    { label: 'Diabetic', color: '#4059ad' }
-  ];
+    const legendData = [
+      { label: 'Non-diabetic', color: '#2ecc71' },
+      { label: 'Pre-diabetic', color: '#f1c40f' },
+      { label: 'Diabetic', color: '#4059ad' }
+    ];
 
-  const colorLegend = legendContainer.append("g")
-    .attr("class", "color-legend");
+    legendData.forEach(d => {
+      const item = document.createElement('span');
+      item.className = 'legend-item';
+      item.innerHTML = `<span class="legend-dot" style="background:${d.color}"></span>${d.label}`;
+      legendItemsEl.appendChild(item);
+    });
 
-  colorLegend.selectAll("rect")
-    .data(legendData)
-    .enter()
-    .append("rect")
-    .attr("x", 0)
-    .attr("y", (d, i) => i * 25)
-    .attr("width", 18)
-    .attr("height", 18)
-    .style("fill", d => d.color);
+    const mealLegendData = [
+      { label: 'Breakfast', icon: BASE + 'pics/breakfast.png' },
+      { label: 'Lunch',     icon: BASE + 'pics/lunch.png' },
+      { label: 'Dinner',    icon: BASE + 'pics/dinner.png' },
+      { label: 'Snack',     icon: BASE + 'pics/snack.png' }
+    ];
 
-  colorLegend.selectAll("text")
-    .data(legendData)
-    .enter()
-    .append("text")
-    .attr("x", 26)
-    .attr("y", (d, i) => i * 25 + 13)
-    .style("font-size", "14px")
-    .style("fill", "#333")
-    .text(d => d.label);
-
-  const mealLegendData = [
-    { type: "breakfast", label: "Breakfast", icon: BASE + "pics/breakfast.png" },
-    { type: "lunch", label: "Lunch", icon: BASE + "pics/lunch.png" },
-    { type: "dinner", label: "Dinner", icon: BASE + "pics/dinner.png" },
-    { type: "snack", label: "Snack", icon: BASE + "pics/snack.png" }
-  ];
-
-  const mealLegend = legendContainer.append("g")
-    .attr("class", "meal-legend")
-    .attr("transform", `translate(150, 0)`);
-
-  mealLegend.selectAll("image")
-    .data(mealLegendData)
-    .enter()
-    .append("image")
-    .attr("xlink:href", d => d.icon)
-    .attr("x", 0)
-    .attr("y", (d, i) => i * 25)
-    .attr("width", 18)
-    .attr("height", 18);
-
-  mealLegend.selectAll("text")
-    .data(mealLegendData)
-    .enter()
-    .append("text")
-    .attr("x", 26)
-    .attr("y", (d, i) => i * 25 + 13)
-    .style("font-size", "14px")
-    .style("fill", "#333")
-    .text(d => d.label);
+    mealLegendData.forEach(d => {
+      const item = document.createElement('span');
+      item.className = 'legend-item';
+      item.innerHTML = `<img class="legend-icon" src="${d.icon}" alt="${d.label}">${d.label}`;
+      legendItemsEl.appendChild(item);
+    });
+  }
 
   const timeExtent = [
     d3.min(processedData, d => d3.min(d.values, v => v.time)),
@@ -589,7 +557,18 @@ function plotData(participants) {
   tooltip = d3.select(tooltipDiv);
 
   createParticipantButtons(participants);
-  rendering_timeSlider(1, Math.ceil(timeExtent[1] / 1440));
+
+  const defaults = window.__quizMatches
+    ? [window.__quizMatches["Non-diabetic"], window.__quizMatches["Pre-diabetic"], window.__quizMatches["Diabetic"]]
+    : [1, 8, 12];
+
+  defaults.forEach(pid => {
+    activeParticipants.add(pid);
+    const btn = document.querySelector(`.participant-btn[data-pid="${pid}"]`);
+    if (btn) btn.classList.add('active');
+  });
+
+  rendering_timeSlider(1, 2);
 
   updateVisualization();
 }
@@ -597,6 +576,19 @@ function plotData(participants) {
 async function loadDataAndPlot() {
   const participants = await loadData();
   plotData(participants);
+}
+
+export function selectParticipants(pids) {
+  activeParticipants.clear();
+  document.querySelectorAll('.participant-btn').forEach(btn => btn.classList.remove('active'));
+
+  pids.forEach(pid => {
+    activeParticipants.add(pid);
+    const btn = document.querySelector(`.participant-btn[data-pid="${pid}"]`);
+    if (btn) btn.classList.add('active');
+  });
+
+  updateVisualization();
 }
 
 export function init() {

@@ -243,15 +243,6 @@
     gap: 1rem;
   }
 
-  /* Instruction */
-  #instruction {
-    padding: 2rem 1rem;
-  }
-
-  #ui {
-    width: 95%;
-  }
-
   /* Stats */
   .stats-container {
     margin-top: 15px;
