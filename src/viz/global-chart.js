@@ -603,11 +603,15 @@ export function init() {
 
   loadDataAndPlot();
 
+  let chartResizeTimer;
   window.addEventListener('resize', () => {
-    const startDay = Math.round(timeRange[0] / 1440);
-    const endDay = Math.round(timeRange[1] / 1440);
-    updateVisualization();
-    rendering_timeSlider(startDay, endDay);
+    clearTimeout(chartResizeTimer);
+    chartResizeTimer = setTimeout(() => {
+      const startDay = Math.round(timeRange[0] / 1440);
+      const endDay = Math.round(timeRange[1] / 1440);
+      updateVisualization();
+      rendering_timeSlider(startDay, endDay);
+    }, 250);
   });
 
   document.getElementById("toggle-meal-icons").addEventListener("change", function() {

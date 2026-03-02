@@ -81,13 +81,13 @@ function setupDistributionPlot() {
 
     xLabelText = svg.append('text')
       .style('text-anchor', 'middle')
-      .style('font-family', '"DM Serif Text", serif')
+      .style('font-family', '"Red Hat Text", sans-serif')
       .style('font-size', '14px');
 
     yLabelText = svg.append('text')
       .attr('transform', 'rotate(-90)')
       .style('text-anchor', 'middle')
-      .style('font-family', '"DM Serif Text", serif')
+      .style('font-family', '"Red Hat Text", sans-serif')
       .style('font-size', '14px')
       .text('Probability Density');
 

@@ -236,8 +236,10 @@ function createGlucoseLineChart(container, data, groupColor, yScale, pid) {
     }, 100);
   });
 
+  let resizeTimer;
   const resizeHandler = function() {
-    updateChart();
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => updateChart(), 250);
   };
 
   window.addEventListener('resize', resizeHandler);
